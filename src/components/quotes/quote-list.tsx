@@ -1,5 +1,6 @@
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
+import { EmptyState } from "@/components/ui/empty-state";
 import { QuoteFormDialog } from "./quote-form-dialog";
 import { DeleteQuoteButton } from "./delete-quote-button";
 
@@ -16,6 +17,16 @@ export function QuoteList({
   const nameById = new Map(characters.map((c) => [c.id, c.name]));
   const options = characters.map((c) => ({ id: c.id, name: c.name }));
 
+  if (quotes.length === 0) {
+    return (
+      <EmptyState
+        title="Henüz alıntı yok"
+        hint="Sevdiğin bir cümleyi ekle — sayfa/bölüm ve istersen bir karakterle birlikte."
+        action={<QuoteFormDialog bookId={bookId} characters={options} />}
+      />
+    );
+  }
+
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -25,14 +36,7 @@ export function QuoteList({
         <QuoteFormDialog bookId={bookId} characters={options} />
       </div>
 
-      {quotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-black/15 px-6 py-16 text-center dark:border-white/15">
-          <p className="text-sm text-black/55 dark:text-white/55">
-            Henüz alıntı yok.
-          </p>
-        </div>
-      ) : (
-        <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-3">
           {quotes.map((quote) => {
             const characterName = quote.character_id
               ? nameById.get(quote.character_id)
@@ -64,8 +68,7 @@ export function QuoteList({
               </li>
             );
           })}
-        </ul>
-      )}
+      </ul>
     </div>
   );
 }

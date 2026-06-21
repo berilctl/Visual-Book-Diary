@@ -55,7 +55,7 @@ export function QuoteFormDialog({
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-neutral-900">
+          <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-neutral-900">
             <h2 className="mb-4 text-lg font-semibold">Alıntı ekle</h2>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">

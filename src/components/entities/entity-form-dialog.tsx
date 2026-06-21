@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { createEntity } from "@/app/actions/entities";
 import { ENTITY_LABELS, type EntityKind } from "@/lib/entities";
 
@@ -28,12 +28,15 @@ export function EntityFormDialog({
   const [prompt, setPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
   const [aiUrl, setAiUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   function openDialog() {
     setError(null);
     setImageMode("upload");
     setPrompt("");
     setAiUrl(null);
+    setFileName(null);
     setOpen(true);
   }
 
@@ -197,6 +200,7 @@ export function EntityFormDialog({
                     onClick={() => {
                       setImageMode("ai");
                       setError(null);
+                      setFileName(null);
                     }}
                     className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${
                       imageMode === "ai"
@@ -209,12 +213,30 @@ export function EntityFormDialog({
                 </div>
 
                 {imageMode === "upload" ? (
-                  <input
-                    type="file"
-                    name="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="text-sm"
-                  />
+                  <div className="flex items-center gap-3">
+                    {/* Gizli input FormData için "file" adıyla kalır;
+                        davranış aynı, sadece tetikleyici şık bir buton. */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      name="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) =>
+                        setFileName(e.target.files?.[0]?.name ?? null)
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="shrink-0 rounded-lg border border-black/15 px-3 py-1.5 text-sm font-medium transition hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/5"
+                    >
+                      Görsel Seç
+                    </button>
+                    <span className="min-w-0 flex-1 truncate text-xs text-black/55 dark:text-white/55">
+                      {fileName ?? "Dosya seçilmedi"}
+                    </span>
+                  </div>
                 ) : (
                   <div className="flex flex-col gap-2">
                     <textarea

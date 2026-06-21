@@ -4,6 +4,7 @@ import { createBook } from "@/app/actions/books";
 import { LogoutButton } from "@/components/logout-button";
 import { BookFormDialog } from "@/components/books/book-form-dialog";
 import { BookCard } from "@/components/books/book-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Book } from "@/lib/books";
 
 // /dashboard — kullanıcının kitaplığı (PRD Bölüm 7). RLS sayesinde yalnızca
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10">
+      <header className="flex items-center justify-between gap-3 border-b border-black/10 px-4 py-4 sm:px-6 dark:border-white/10">
         <div>
           <span className="text-sm font-semibold">Visual Book Diary</span>
           <p className="text-xs text-black/55 dark:text-white/55">
@@ -52,21 +53,18 @@ export default async function DashboardPage() {
         <LogoutButton />
       </header>
 
-      <section className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+      <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="text-xl font-semibold">Kitaplığım</h1>
           {list.length > 0 && addButton}
         </div>
 
         {list.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-black/15 px-6 py-20 text-center dark:border-white/15">
-            <p className="text-base font-medium">Henüz kitabın yok</p>
-            <p className="max-w-sm text-sm text-black/55 dark:text-white/55">
-              İlk kitabını ekleyerek karakterlerini, mekanlarını ve alıntılarını
-              biriktirmeye başla.
-            </p>
-            {addButton}
-          </div>
+          <EmptyState
+            title="Henüz kitabın yok"
+            hint="İlk kitabını ekleyerek karakterlerini, mekanlarını ve alıntılarını biriktirmeye başla."
+            action={addButton}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((book) => (

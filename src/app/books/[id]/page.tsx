@@ -54,7 +54,7 @@ export default async function BookDetailPage({
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="border-b border-black/10 px-6 py-4 dark:border-white/10">
+      <header className="border-b border-black/10 px-4 py-4 sm:px-6 dark:border-white/10">
         <Link
           href="/dashboard"
           className="text-sm text-black/55 transition hover:text-black/80 dark:text-white/55 dark:hover:text-white/80"
@@ -76,7 +76,7 @@ export default async function BookDetailPage({
         </div>
       </header>
 
-      <section className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+      <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
         <BookTabs
           bookId={book.id}
           characters={(characters ?? []) as Entity[]}
