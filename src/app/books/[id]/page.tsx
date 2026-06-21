@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BOOK_STATUS_LABELS, type Book } from "@/lib/books";
+import type { Entity } from "@/lib/entities";
 import { BookTabs } from "@/components/books/book-tabs";
 
 // /books/[id] — Kitap detay sayfası + 3 sekme iskeleti (PRD Bölüm 7).
@@ -29,6 +30,20 @@ export default async function BookDetailPage({
 
   if (!book) notFound();
 
+  // Karakter ve mekanları paralel çek (RLS yalnızca kullanıcının verisini döner).
+  const [{ data: characters }, { data: locations }] = await Promise.all([
+    supabase
+      .from("characters")
+      .select("*")
+      .eq("book_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("locations")
+      .select("*")
+      .eq("book_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
+
   return (
     <main className="flex flex-1 flex-col">
       <header className="border-b border-black/10 px-6 py-4 dark:border-white/10">
@@ -54,7 +69,11 @@ export default async function BookDetailPage({
       </header>
 
       <section className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
-        <BookTabs />
+        <BookTabs
+          bookId={book.id}
+          characters={(characters ?? []) as Entity[]}
+          locations={(locations ?? []) as Entity[]}
+        />
       </section>
     </main>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { EntityGrid } from "@/components/entities/entity-grid";
+import type { Entity } from "@/lib/entities";
 
 type TabKey = "characters" | "locations" | "quotes";
 
@@ -10,14 +12,15 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "quotes", label: "Alıntılar" },
 ];
 
-// Boş durum mesajları (içerik Adım 6-9'da gelecek).
-const EMPTY: Record<TabKey, string> = {
-  characters: "Henüz karakter yok.",
-  locations: "Henüz mekan yok.",
-  quotes: "Henüz alıntı yok.",
-};
-
-export function BookTabs() {
+export function BookTabs({
+  bookId,
+  characters,
+  locations,
+}: {
+  bookId: string;
+  characters: Entity[];
+  locations: Entity[];
+}) {
   const [active, setActive] = useState<TabKey>("characters");
 
   return (
@@ -47,12 +50,20 @@ export function BookTabs() {
         })}
       </div>
 
-      <div role="tabpanel" className="py-10">
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-black/15 px-6 py-16 text-center dark:border-white/15">
-          <p className="text-sm text-black/55 dark:text-white/55">
-            {EMPTY[active]}
-          </p>
-        </div>
+      <div role="tabpanel" className="py-8">
+        {active === "characters" && (
+          <EntityGrid kind="characters" bookId={bookId} items={characters} />
+        )}
+        {active === "locations" && (
+          <EntityGrid kind="locations" bookId={bookId} items={locations} />
+        )}
+        {active === "quotes" && (
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-black/15 px-6 py-16 text-center dark:border-white/15">
+            <p className="text-sm text-black/55 dark:text-white/55">
+              Henüz alıntı yok.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
