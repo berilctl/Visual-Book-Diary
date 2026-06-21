@@ -5,10 +5,33 @@ export type EntityKind = (typeof ENTITY_KINDS)[number];
 
 export const ENTITY_LABELS: Record<
   EntityKind,
-  { singular: string; addCta: string }
+  {
+    singular: string;
+    addCta: string;
+    namePlaceholder: string;
+    descriptionPlaceholder: string;
+    tagsPlaceholder: string;
+    promptPlaceholder: string;
+  }
 > = {
-  characters: { singular: "karakter", addCta: "+ Karakter Ekle" },
-  locations: { singular: "mekan", addCta: "+ Mekan Ekle" },
+  characters: {
+    singular: "karakter",
+    addCta: "+ Karakter Ekle",
+    namePlaceholder: "örn. Mina Harker",
+    descriptionPlaceholder: "Görünüş, kişilik, önemli özellikler…",
+    tagsPlaceholder: "virgülle ayır: Vampir, Antagonist",
+    promptPlaceholder:
+      "örn. solgun tenli, kızıl gözlü bir vampir, gotik portre",
+  },
+  locations: {
+    singular: "mekan",
+    addCta: "+ Mekan Ekle",
+    namePlaceholder: "örn. Whitby Manastırı",
+    descriptionPlaceholder: "Görünüş, atmosfer, hikâyedeki önemi…",
+    tagsPlaceholder: "virgülle ayır: Şato, Köy, Gizemli",
+    promptPlaceholder:
+      "örn. sisli bir uçurumda gotik manastır harabesi, ay ışığı",
+  },
 };
 
 export type Entity = {

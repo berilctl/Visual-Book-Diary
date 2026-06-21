@@ -75,6 +75,63 @@ export async function createEntity(
   return { ok: true };
 }
 
+// Karakter/mekan kartını güncelle. createEntity ile aynı güvenlik kalıbı:
+// kind allowlist guard, book_id sahipliği, image_url değişiyorsa Storage-prefix
+// kontrolü, RLS devrede. image_url yalnızca yeni bir görsel verildiğinde
+// güncellenir; boşsa mevcut görsel korunur.
+export async function updateEntity(
+  _prev: EntityFormState,
+  formData: FormData,
+): Promise<EntityFormState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Oturum bulunamadı. Lütfen tekrar giriş yap." };
+
+  const kind = formData.get("kind");
+  if (!isEntityKind(kind)) return { error: "Geçersiz tür." };
+
+  const id = String(formData.get("id") ?? "").trim();
+  const bookId = String(formData.get("book_id") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id) return { error: "Kart kimliği eksik." };
+  if (!bookId) return { error: "Kitap kimliği eksik." };
+  if (!name) return { error: "İsim zorunludur." };
+
+  // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
+  const { data: book } = await supabase
+    .from("books")
+    .select("id")
+    .eq("id", bookId)
+    .maybeSingle();
+  if (!book) {
+    return { error: "Kitap bulunamadı veya bu kitaba erişimin yok." };
+  }
+
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const tags = parseTags(String(formData.get("tags") ?? ""));
+
+  const updates: Record<string, unknown> = { name, description, tags };
+
+  // image_url yalnızca yeni görsel verildiyse güncellenir; verildiyse de
+  // sadece kendi Storage bucket'ımızdan gelebilir (createEntity ile aynı).
+  const imageUrl = String(formData.get("image_url") ?? "").trim();
+  if (imageUrl) {
+    const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "")}/storage/v1/object/public/book-images/`;
+    if (!imageUrl.startsWith(storagePrefix)) {
+      return { error: "Geçersiz görsel kaynağı." };
+    }
+    updates.image_url = imageUrl;
+  }
+
+  const { error } = await supabase.from(kind).update(updates).eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/books/${bookId}`);
+  return { ok: true };
+}
+
 // Karakter/mekan kartı sil. RLS sahipliği zorunlu kılar.
 export async function deleteEntity(formData: FormData): Promise<void> {
   const supabase = await createClient();

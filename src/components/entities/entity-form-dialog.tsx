@@ -1,24 +1,31 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { createEntity } from "@/app/actions/entities";
-import { ENTITY_LABELS, type EntityKind } from "@/lib/entities";
+import { createEntity, updateEntity } from "@/app/actions/entities";
+import { ENTITY_LABELS, type Entity, type EntityKind } from "@/lib/entities";
 
 type ImageMode = "upload" | "ai";
 
-// Karakter/mekan kartı ekleme modalı. Görsel iki yolla eklenebilir:
+// Karakter/mekan kartı ekleme VE düzenleme modalı (mode ile). Görsel iki yolla
+// eklenir/değiştirilir:
 //   (a) Dosya yükle -> /api/upload-image
-//   (b) AI ile üret -> /api/generate-image (Replicate'in byte'ları Storage'a
+//   (b) AI ile üret -> /api/generate-image (Replicate byte'ları Storage'a
 //       re-host edilir, kalıcı URL döner)
-// Her iki yolda da kalıcı Storage URL'i createEntity'ye geçer.
+// Her iki yolda da kalıcı Storage URL'i create/updateEntity'ye geçer.
+// Düzenlemede görsel değiştirilmezse mevcut görsel korunur.
 export function EntityFormDialog({
   kind,
   bookId,
+  mode = "create",
+  entity,
 }: {
   kind: EntityKind;
   bookId: string;
+  mode?: "create" | "edit";
+  entity?: Entity;
 }) {
   const label = ENTITY_LABELS[kind];
+  const isEdit = mode === "edit";
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -75,6 +82,7 @@ export function EntityFormDialog({
     const values = new FormData(formEl);
 
     startTransition(async () => {
+      // imageUrl boş kalırsa: create'te görselsiz, edit'te mevcut görsel korunur.
       let imageUrl = "";
 
       if (imageMode === "upload") {
@@ -95,23 +103,33 @@ export function EntityFormDialog({
           imageUrl = json.url;
         }
       } else {
-        // AI modunda görselin üretilmiş olması gerekir.
-        if (!aiUrl) {
+        // AI modu: üretilmiş bir görsel varsa kullan.
+        if (aiUrl) {
+          imageUrl = aiUrl;
+        } else if (!isEdit) {
+          // Ekleme akışında AI sekmesi seçiliyse görsel üretilmiş olmalı.
           setError("Önce 'Görsel Üret' ile bir görsel oluştur.");
           return;
         }
-        imageUrl = aiUrl;
+        // Düzenlemede üretilmemişse mevcut görsel korunur (imageUrl boş kalır).
       }
 
-      const createData = new FormData();
-      createData.set("kind", kind);
-      createData.set("book_id", bookId);
-      createData.set("name", String(values.get("name") ?? ""));
-      createData.set("description", String(values.get("description") ?? ""));
-      createData.set("tags", String(values.get("tags") ?? ""));
-      createData.set("image_url", imageUrl);
+      const data = new FormData();
+      data.set("kind", kind);
+      data.set("book_id", bookId);
+      data.set("name", String(values.get("name") ?? ""));
+      data.set("description", String(values.get("description") ?? ""));
+      data.set("tags", String(values.get("tags") ?? ""));
+      data.set("image_url", imageUrl);
 
-      const result = await createEntity(undefined, createData);
+      let result;
+      if (isEdit && entity) {
+        data.set("id", entity.id);
+        result = await updateEntity(undefined, data);
+      } else {
+        result = await createEntity(undefined, data);
+      }
+
       if (result?.error) {
         setError(result.error);
       } else {
@@ -125,13 +143,24 @@ export function EntityFormDialog({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={openDialog}
-        className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-      >
-        {label.addCta}
-      </button>
+      {isEdit ? (
+        <button
+          type="button"
+          onClick={openDialog}
+          aria-label={`${entity?.name ?? label.singular} düzenle`}
+          className="rounded-md px-2 py-0.5 text-xs font-medium text-black/70 transition hover:bg-black/5 dark:text-white/70 dark:hover:bg-white/5"
+        >
+          Düzenle
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={openDialog}
+          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+        >
+          {label.addCta}
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -142,7 +171,7 @@ export function EntityFormDialog({
           />
           <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-neutral-900">
             <h2 className="mb-4 text-lg font-semibold capitalize">
-              {label.singular} ekle
+              {label.singular} {isEdit ? "düzenle" : "ekle"}
             </h2>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -151,9 +180,8 @@ export function EntityFormDialog({
                 <input
                   name="name"
                   required
-                  placeholder={
-                    kind === "characters" ? "örn. Mina Harker" : "örn. Whitby"
-                  }
+                  defaultValue={entity?.name ?? ""}
+                  placeholder={label.namePlaceholder}
                   className={inputClass}
                 />
               </label>
@@ -163,7 +191,8 @@ export function EntityFormDialog({
                 <textarea
                   name="description"
                   rows={3}
-                  placeholder="Görünüş, kişilik, atmosfer…"
+                  defaultValue={entity?.description ?? ""}
+                  placeholder={label.descriptionPlaceholder}
                   className={`resize-y ${inputClass}`}
                 />
               </label>
@@ -172,7 +201,8 @@ export function EntityFormDialog({
                 <span className="font-medium">Etiketler</span>
                 <input
                   name="tags"
-                  placeholder="virgülle ayır: Vampir, Antagonist"
+                  defaultValue={entity?.tags?.join(", ") ?? ""}
+                  placeholder={label.tagsPlaceholder}
                   className={inputClass}
                 />
               </label>
@@ -180,6 +210,22 @@ export function EntityFormDialog({
               {/* Görsel kaynağı seçimi */}
               <div className="mt-1 flex flex-col gap-2">
                 <span className="text-sm font-medium">Görsel</span>
+
+                {isEdit && entity?.image_url && (
+                  <div className="flex items-center gap-3 rounded-lg border border-black/10 p-2 dark:border-white/10">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- mevcut görsel önizlemesi */}
+                    <img
+                      src={entity.image_url}
+                      alt="Mevcut görsel"
+                      className="h-12 w-12 shrink-0 rounded object-cover"
+                    />
+                    <span className="text-xs text-black/55 dark:text-white/55">
+                      Mevcut görsel. Değiştirmek için yeni dosya seç ya da AI ile
+                      üret; dokunmazsan korunur.
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex gap-1 rounded-lg bg-black/5 p-1 dark:bg-white/5">
                   <button
                     type="button"
@@ -243,7 +289,7 @@ export function EntityFormDialog({
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       rows={2}
-                      placeholder="örn. solgun tenli, kızıl gözlü bir vampir, gotik portre"
+                      placeholder={label.promptPlaceholder}
                       className={`resize-y ${inputClass}`}
                     />
                     <button
@@ -290,7 +336,11 @@ export function EntityFormDialog({
                   disabled={pending || generating}
                   className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
                 >
-                  {pending ? "Kaydediliyor…" : "Ekle"}
+                  {pending
+                    ? "Kaydediliyor…"
+                    : isEdit
+                      ? "Kaydet"
+                      : "Ekle"}
                 </button>
               </div>
             </form>

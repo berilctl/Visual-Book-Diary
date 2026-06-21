@@ -1,5 +1,6 @@
 import type { Entity, EntityKind } from "@/lib/entities";
 import { DeleteEntityButton } from "./delete-entity-button";
+import { EntityFormDialog } from "./entity-form-dialog";
 
 // Masonry'de kartların yükseklikleri görselin doğal en-boy oranıyla değişir;
 // bu yüzden sabit boyutlu next/image yerine düz <img> + w-full/h-auto kullanıyoruz.
@@ -26,12 +27,20 @@ export function EntityCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold leading-tight">{entity.name}</h3>
-          <DeleteEntityButton
-            kind={kind}
-            bookId={bookId}
-            id={entity.id}
-            name={entity.name}
-          />
+          <div className="flex shrink-0 items-center gap-0.5">
+            <EntityFormDialog
+              kind={kind}
+              bookId={bookId}
+              mode="edit"
+              entity={entity}
+            />
+            <DeleteEntityButton
+              kind={kind}
+              bookId={bookId}
+              id={entity.id}
+              name={entity.name}
+            />
+          </div>
         </div>
 
         {entity.description && (
