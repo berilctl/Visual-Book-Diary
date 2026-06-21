@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { EntityGrid } from "@/components/entities/entity-grid";
+import { QuoteList } from "@/components/quotes/quote-list";
 import type { Entity } from "@/lib/entities";
+import type { Quote } from "@/lib/quotes";
 
 type TabKey = "characters" | "locations" | "quotes";
 
@@ -16,10 +18,12 @@ export function BookTabs({
   bookId,
   characters,
   locations,
+  quotes,
 }: {
   bookId: string;
   characters: Entity[];
   locations: Entity[];
+  quotes: Quote[];
 }) {
   const [active, setActive] = useState<TabKey>("characters");
 
@@ -58,11 +62,7 @@ export function BookTabs({
           <EntityGrid kind="locations" bookId={bookId} items={locations} />
         )}
         {active === "quotes" && (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-black/15 px-6 py-16 text-center dark:border-white/15">
-            <p className="text-sm text-black/55 dark:text-white/55">
-              Henüz alıntı yok.
-            </p>
-          </div>
+          <QuoteList bookId={bookId} quotes={quotes} characters={characters} />
         )}
       </div>
     </div>
