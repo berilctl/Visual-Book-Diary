@@ -2,6 +2,7 @@
 
 import { deleteBook } from "@/app/actions/books";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { buttonClass } from "@/components/ui/button";
 
 // Silme — onay sorar ve CASCADE etkisini kullanıcıya hatırlatır (PRD Bölüm 2).
 export function DeleteBookButton({
@@ -27,7 +28,7 @@ export function DeleteBookButton({
       <SubmitButton
         idleLabel="Sil"
         pendingLabel="Siliniyor…"
-        className="rounded-lg border border-red-500/40 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-500/10 disabled:opacity-50 dark:text-red-400"
+        className={buttonClass({ variant: "danger", size: "sm" })}
       />
     </form>
   );

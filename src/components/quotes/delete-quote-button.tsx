@@ -2,6 +2,7 @@
 
 import { deleteQuote } from "@/app/actions/quotes";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { buttonClass } from "@/components/ui/button";
 
 export function DeleteQuoteButton({
   id,
@@ -25,7 +26,7 @@ export function DeleteQuoteButton({
         idleLabel="Sil"
         pendingLabel="Siliniyor…"
         ariaLabel="Alıntıyı sil"
-        className="rounded-md px-2 py-0.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10 disabled:opacity-50 dark:text-red-400"
+        className={buttonClass({ variant: "dangerQuiet", size: "sm" })}
       />
     </form>
   );

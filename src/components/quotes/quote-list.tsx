@@ -1,6 +1,7 @@
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
 import { EmptyState } from "@/components/ui/empty-state";
+import { cardClass } from "@/components/ui/card";
 import { QuoteFormDialog } from "./quote-form-dialog";
 import { DeleteQuoteButton } from "./delete-quote-button";
 
@@ -30,44 +31,37 @@ export function QuoteList({
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-4">
-        <p className="text-sm text-black/55 dark:text-white/55">
-          {quotes.length} alıntı
-        </p>
+        <p className="text-sm text-ink-muted">{quotes.length} alıntı</p>
         <QuoteFormDialog bookId={bookId} characters={options} />
       </div>
 
       <ul className="flex flex-col gap-3">
-          {quotes.map((quote) => {
-            const characterName = quote.character_id
-              ? nameById.get(quote.character_id)
-              : null;
-            return (
-              <li
-                key={quote.id}
-                className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <blockquote className="whitespace-pre-wrap text-sm leading-relaxed">
-                    “{quote.content}”
-                  </blockquote>
-                  <DeleteQuoteButton id={quote.id} bookId={bookId} />
-                </div>
+        {quotes.map((quote) => {
+          const characterName = quote.character_id
+            ? nameById.get(quote.character_id)
+            : null;
+          return (
+            <li key={quote.id} className={`p-5 ${cardClass}`}>
+              <div className="flex items-start justify-between gap-3">
+                <blockquote className="whitespace-pre-wrap font-serif text-lg leading-relaxed text-ink">
+                  “{quote.content}”
+                </blockquote>
+                <DeleteQuoteButton id={quote.id} bookId={bookId} />
+              </div>
 
-                {(quote.page_or_chapter || characterName) && (
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-black/50 dark:text-white/50">
-                    {characterName && (
-                      <span className="font-medium text-black/65 dark:text-white/65">
-                        — {characterName}
-                      </span>
-                    )}
-                    {quote.page_or_chapter && (
-                      <span>{quote.page_or_chapter}</span>
-                    )}
-                  </div>
-                )}
-              </li>
-            );
-          })}
+              {(quote.page_or_chapter || characterName) && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
+                  {characterName && (
+                    <span className="font-medium text-ink-muted">
+                      — {characterName}
+                    </span>
+                  )}
+                  {quote.page_or_chapter && <span>{quote.page_or_chapter}</span>}
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

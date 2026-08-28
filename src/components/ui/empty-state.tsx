@@ -11,13 +11,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-black/15 px-6 py-16 text-center dark:border-white/15">
-      <p className="text-base font-medium">{title}</p>
-      {hint && (
-        <p className="max-w-sm text-sm text-black/55 dark:text-white/55">
-          {hint}
-        </p>
-      )}
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line-strong px-6 py-16 text-center">
+      <p className="font-serif text-lg text-ink">{title}</p>
+      {hint && <p className="max-w-sm text-sm text-ink-muted">{hint}</p>}
       {action && <div className="mt-1">{action}</div>}
     </div>
   );

@@ -37,16 +37,15 @@ export default async function DashboardPage() {
       heading="Kitap Ekle"
       submitLabel="Ekle"
       triggerLabel="+ Kitap Ekle"
-      triggerClassName="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
     />
   );
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between gap-3 border-b border-black/10 px-4 py-4 sm:px-6 dark:border-white/10">
+      <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-6">
         <div>
-          <span className="text-sm font-semibold">Visual Book Diary</span>
-          <p className="text-xs text-black/55 dark:text-white/55">
+          <span className="font-serif text-base text-ink">Visual Book Diary</span>
+          <p className="text-xs text-ink-subtle">
             Hoş geldin {displayName} 👋
           </p>
         </div>
@@ -55,7 +54,7 @@ export default async function DashboardPage() {
 
       <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold">Kitaplığım</h1>
+          <h1 className="text-2xl text-ink">Kitaplığım</h1>
           {list.length > 0 && addButton}
         </div>
 

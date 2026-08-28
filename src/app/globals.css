@@ -33,8 +33,11 @@
   --accent-soft: #f6e7e5; /* aksanın çok açık zemin tonu */
 
   /* İkincil aksan — yaldız */
-  --gold: #8a6534; /* metin olarak da okunur (4.9:1) */
+  --gold: #7d5b2e; /* metin olarak da okunur: kâğıtta 5.9:1, gold-soft üzerinde 5.3:1 */
   --gold-soft: #f5ead8;
+
+  /* Modal arka planı — her iki temada da koyu kalmalı */
+  --overlay: rgb(31 26 21 / 0.45);
 
   /* Durum renkleri */
   --danger: #a8322b;
@@ -67,6 +70,8 @@
     --gold: #cda368;
     --gold-soft: #2e2419;
 
+    --overlay: rgb(0 0 0 / 0.65);
+
     --danger: #e08a80;
     --danger-soft: #33201d;
     --success: #a8c088;
@@ -97,14 +102,19 @@
   --gold: #cda368;
   --gold-soft: #2e2419;
 
+  --overlay: rgb(0 0 0 / 0.65);
+
   --danger: #e08a80;
   --danger-soft: #33201d;
   --success: #a8c088;
   --success-soft: #22291a;
 }
 
-/* `dark:` variant'ı token'larla aynı üç durumu izlesin: OS tercihi + data-theme.
-   Böylece toggle geldiğinde eski `dark:*` utility'leri de doğru tarafta kalır. */
+/* Bileşenler artık token kullandığı için `dark:` utility'si hiçbir yerde
+   kullanılmıyor (Tailwind kullanılmayan variant için CSS üretmez). Yine de
+   tanımı duruyor: ileride biri `dark:` yazarsa varsayılan davranış yalnızca OS
+   tercihine bakar ve toggle'la çelişirdi; bu tanım onu token'larla aynı üçlü
+   mantığa bağlar. */
 @custom-variant dark {
   @media (prefers-color-scheme: dark) {
     &:where(:not([data-theme="light"], [data-theme="light"] *)) {
@@ -135,6 +145,8 @@
 
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+
+  --color-overlay: var(--overlay);
 
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);

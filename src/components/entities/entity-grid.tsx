@@ -28,7 +28,7 @@ export function EntityGrid({
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-4">
-        <p className="text-sm text-black/55 dark:text-white/55">
+        <p className="text-sm text-ink-muted">
           {items.length} {label.singular}
         </p>
         <EntityFormDialog kind={kind} bookId={bookId} />

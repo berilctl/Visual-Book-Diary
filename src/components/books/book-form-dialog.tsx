@@ -3,6 +3,9 @@
 import { useState, useTransition } from "react";
 import type { BookFormState } from "@/app/actions/books";
 import { BOOK_STATUSES, BOOK_STATUS_LABELS } from "@/lib/books";
+import { buttonClass, type ButtonVariant } from "@/components/ui/button";
+import { Field, Input, Select } from "@/components/ui/field";
+import { Modal, ModalActions } from "@/components/ui/modal";
 
 type Action = (
   prev: BookFormState,
@@ -14,7 +17,7 @@ type Props = {
   heading: string;
   submitLabel: string;
   triggerLabel: string;
-  triggerClassName?: string;
+  triggerVariant?: ButtonVariant;
   // Düzenleme modu için:
   bookId?: string;
   initial?: {
@@ -32,7 +35,7 @@ export function BookFormDialog({
   heading,
   submitLabel,
   triggerLabel,
-  triggerClassName,
+  triggerVariant = "primary",
   bookId,
   initial,
 }: Props) {
@@ -61,94 +64,81 @@ export function BookFormDialog({
 
   return (
     <>
-      <button type="button" className={triggerClassName} onClick={openDialog}>
+      <button
+        type="button"
+        className={buttonClass({
+          variant: triggerVariant,
+          size: triggerVariant === "primary" ? "md" : "sm",
+        })}
+        onClick={openDialog}
+      >
         {triggerLabel}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-neutral-900">
-            <h2 className="mb-4 text-lg font-semibold">{heading}</h2>
+      <Modal open={open} onClose={() => setOpen(false)} heading={heading}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {bookId && <input type="hidden" name="id" value={bookId} />}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              {bookId && <input type="hidden" name="id" value={bookId} />}
+          <Field label="Kitap adı" required>
+            <Input
+              name="title"
+              required
+              defaultValue={initial?.title ?? ""}
+              placeholder="örn. Dracula"
+            />
+          </Field>
 
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Kitap adı *</span>
-                <input
-                  name="title"
-                  required
-                  defaultValue={initial?.title ?? ""}
-                  placeholder="örn. Dracula"
-                  className="rounded-lg border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/15 dark:focus:border-white/40"
-                />
-              </label>
+          <Field label="Yazar" required>
+            <Input
+              name="author"
+              required
+              defaultValue={initial?.author ?? ""}
+              placeholder="örn. Bram Stoker"
+            />
+          </Field>
 
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Yazar *</span>
-                <input
-                  name="author"
-                  required
-                  defaultValue={initial?.author ?? ""}
-                  placeholder="örn. Bram Stoker"
-                  className="rounded-lg border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/15 dark:focus:border-white/40"
-                />
-              </label>
+          <Field label="Başlangıç tarihi">
+            <Input
+              type="date"
+              name="start_date"
+              defaultValue={initial?.start_date ?? ""}
+            />
+          </Field>
 
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Başlangıç tarihi</span>
-                <input
-                  type="date"
-                  name="start_date"
-                  defaultValue={initial?.start_date ?? ""}
-                  className="rounded-lg border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/15 dark:focus:border-white/40"
-                />
-              </label>
+          <Field label="Durum">
+            <Select name="status" defaultValue={initial?.status ?? "reading"}>
+              {BOOK_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {BOOK_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </Select>
+          </Field>
 
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Durum</span>
-                <select
-                  name="status"
-                  defaultValue={initial?.status ?? "reading"}
-                  className="rounded-lg border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/15 dark:focus:border-white/40 dark:bg-neutral-900"
-                >
-                  {BOOK_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {BOOK_STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+          {error && (
+            <p className="text-sm text-danger" role="alert">
+              {error}
+            </p>
+          )}
 
-              {error && (
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-              )}
-
-              <div className="mt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-lg border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/5"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  disabled={pending}
-                  className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-                >
-                  {pending ? "Kaydediliyor…" : submitLabel}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <ModalActions>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className={buttonClass({ variant: "secondary" })}
+            >
+              İptal
+            </button>
+            <button
+              type="submit"
+              disabled={pending}
+              className={buttonClass()}
+            >
+              {pending ? "Kaydediliyor…" : submitLabel}
+            </button>
+          </ModalActions>
+        </form>
+      </Modal>
     </>
   );
 }
