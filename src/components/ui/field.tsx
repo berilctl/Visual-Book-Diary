@@ -7,9 +7,12 @@ import type {
 
 // Form kontrollerinin ortak görünümü. Daha önce bu string 10 dosyada
 // birebir kopyalıydı.
+// Not: odak halkasını iptal eden utility bilerek kaldırıldı. Tailwind
+// utility'leri base katmanını ezdiği için globals.css'teki :focus-visible
+// halkasını yok ediyordu; kenarlık rengiyle birlikte halka da görünmeli.
 export const controlClass =
   "w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm " +
-  "text-ink placeholder:text-ink-subtle outline-none transition " +
+  "text-ink placeholder:text-ink-subtle transition " +
   "focus:border-accent disabled:opacity-50";
 
 // Etiket + kontrol + opsiyonel ipucu sarmalayıcısı.
