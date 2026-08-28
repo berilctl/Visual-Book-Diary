@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 
 export type BadgeTone = "neutral" | "accent" | "gold" | "success" | "danger";
 
+// Renkli tonlar dolgulu, nötr ton konturlu: sıcak paletteki bg-surface-sunken
+// ile bg-gold-soft neredeyse aynı bej okunuyordu, ayırt edilemiyorlardı.
 const TONES: Record<BadgeTone, string> = {
-  neutral: "bg-surface-sunken text-ink-muted",
+  neutral: "border border-line-strong text-ink-muted",
   accent: "bg-accent-soft text-accent",
   gold: "bg-gold-soft text-gold",
   success: "bg-success-soft text-success",

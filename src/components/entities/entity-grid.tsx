@@ -1,7 +1,13 @@
 import { ENTITY_LABELS, type Entity, type EntityKind } from "@/lib/entities";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CharacterIcon, LocationIcon } from "@/components/ui/icons";
 import { EntityCard } from "./entity-card";
 import { EntityFormDialog } from "./entity-form-dialog";
+
+const EMPTY_ICONS: Record<EntityKind, typeof CharacterIcon> = {
+  characters: CharacterIcon,
+  locations: LocationIcon,
+};
 
 // Karakter/mekan listesi: masonry (pure CSS columns) + ekleme + boş durum.
 export function EntityGrid({
@@ -16,8 +22,10 @@ export function EntityGrid({
   const label = ENTITY_LABELS[kind];
 
   if (items.length === 0) {
+    const Icon = EMPTY_ICONS[kind];
     return (
       <EmptyState
+        icon={<Icon className="size-7" />}
         title={`Henüz ${label.singular} yok`}
         hint={`İlk ${label.singular} kartını ekle — görsel yükle ya da betimlemeden AI ile üret.`}
         action={<EntityFormDialog kind={kind} bookId={bookId} />}

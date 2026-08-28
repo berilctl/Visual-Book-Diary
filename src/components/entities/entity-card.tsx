@@ -16,15 +16,19 @@ export function EntityCard({
   entity: Entity;
 }) {
   return (
-    <div className={`mb-4 break-inside-avoid overflow-hidden ${cardClass}`}>
+    <div
+      className={`group mb-4 break-inside-avoid overflow-hidden transition hover:shadow-lift ${cardClass}`}
+    >
       {entity.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element -- masonry doğal oran gerektirir
-        <img
-          src={entity.image_url}
-          alt={entity.name}
-          loading="lazy"
-          className="h-auto w-full object-cover"
-        />
+        <div className="overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element -- masonry doğal oran gerektirir */}
+          <img
+            src={entity.image_url}
+            alt={entity.name}
+            loading="lazy"
+            className="h-auto w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+          />
+        </div>
       )}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">

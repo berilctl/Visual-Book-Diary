@@ -1,6 +1,7 @@
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
 import { EmptyState } from "@/components/ui/empty-state";
+import { QuoteIcon } from "@/components/ui/icons";
 import { cardClass } from "@/components/ui/card";
 import { QuoteFormDialog } from "./quote-form-dialog";
 import { DeleteQuoteButton } from "./delete-quote-button";
@@ -21,6 +22,7 @@ export function QuoteList({
   if (quotes.length === 0) {
     return (
       <EmptyState
+        icon={<QuoteIcon className="size-7" />}
         title="Henüz alıntı yok"
         hint="Sevdiğin bir cümleyi ekle — sayfa/bölüm ve istersen bir karakterle birlikte."
         action={<QuoteFormDialog bookId={bookId} characters={options} />}
