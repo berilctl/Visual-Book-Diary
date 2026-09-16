@@ -145,6 +145,18 @@ export const en: Dictionary = {
     onlyCompleted: "Only finished books can be rated.",
   },
 
+  library: {
+    filterLabel: "Filter by status",
+    all: "All",
+    searchLabel: "Search books",
+    searchPlaceholder: "Title or author",
+    showing: (shown, total) =>
+      `Showing ${shown} of ${plural(total, "book", "books")}`,
+    noResultsTitle: "No matching books",
+    noResultsHint: "Try a different search or clear the filters.",
+    clearFilters: "Clear filters",
+  },
+
   bookStatus: {
     reading: "Reading",
     completed: "Finished",

@@ -142,6 +142,18 @@ export const tr = {
     onlyCompleted: "Yalnızca tamamlanan kitaplar puanlanabilir.",
   },
 
+  library: {
+    filterLabel: "Duruma göre filtrele",
+    all: "Tümü",
+    searchLabel: "Kitaplarda ara",
+    searchPlaceholder: "Kitap adı ya da yazar",
+    showing: (shown: number, total: number) =>
+      `${total} kitaptan ${shown} tanesi gösteriliyor`,
+    noResultsTitle: "Eşleşen kitap yok",
+    noResultsHint: "Farklı bir arama dene ya da filtreleri temizle.",
+    clearFilters: "Filtreleri temizle",
+  },
+
   bookStatus: {
     reading: "Okunuyor",
     completed: "Tamamlandı",

@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/app-header";
 import { BookFormDialog } from "@/components/books/book-form-dialog";
-import { BookCard, type BookSummary } from "@/components/books/book-card";
+import type { BookSummary } from "@/components/books/book-card";
+import { Library } from "@/components/books/library";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookIcon } from "@/components/ui/icons";
 import type { Book } from "@/lib/books";
@@ -91,15 +92,8 @@ export default async function DashboardPage() {
             action={addButton}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-            {list.map((book) => (
-              <BookCard
-                key={book.id}
-                book={book}
-                summary={summaries.get(book.id)}
-              />
-            ))}
-          </div>
+          // Map istemci bileşenine düz nesne olarak geçer.
+          <Library books={list} summaries={Object.fromEntries(summaries)} />
         )}
       </section>
     </main>

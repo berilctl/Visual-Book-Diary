@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cardClass } from "@/components/ui/card";
 
 const FOCUSABLE = [
@@ -102,7 +103,13 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  // document.body'ye portal: pencere onu açan bileşenin DOM'undan bağımsız
+  // çizilir. Kitaplık filtresi kartları gizlediğinde (display:none) içlerinden
+  // açılmış pencere (ör. "Bitirdim" sonrası puan penceresi) görünür kalır;
+  // kartların hover/katman etkileri de pencereyi etkilemez. Pencere yalnızca
+  // istemcide, kullanıcı etkileşimiyle açıldığı için sunucu render'ında
+  // document'a erişilmez.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-overlay"
@@ -131,7 +138,8 @@ export function Modal({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
