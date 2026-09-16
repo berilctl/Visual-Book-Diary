@@ -6,6 +6,12 @@ import { buttonClass } from "@/components/ui/button";
 import { cardClass } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
+import {
+  USERNAME_HINT,
+  USERNAME_MAX,
+  USERNAME_MIN,
+  USERNAME_PATTERN,
+} from "@/lib/username";
 
 type Mode = "login" | "register";
 
@@ -44,31 +50,55 @@ export function AuthForm() {
         action={isLogin ? loginAction : registerAction}
         className="flex flex-col gap-4"
       >
-        {!isLogin && (
-          <Field label="Kullanıcı adı" required>
+        {isLogin ? (
+          // Tek alan: "@" içeriyorsa e-posta, içermiyorsa kullanıcı adı.
+          // type="text" şart — type="email" kullanıcı adını tarayıcıda
+          // gönderilmeden reddediyordu.
+          <Field label="E-posta veya kullanıcı adı" required>
             <Input
-              name="username"
+              name="identifier"
               type="text"
               required
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               placeholder="okur123"
             />
           </Field>
+        ) : (
+          <>
+            <Field label="Kullanıcı adı" required hint={USERNAME_HINT}>
+              <Input
+                name="username"
+                type="text"
+                required
+                minLength={USERNAME_MIN}
+                maxLength={USERNAME_MAX}
+                pattern={USERNAME_PATTERN}
+                title={USERNAME_HINT}
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="okur123"
+              />
+            </Field>
+            <Field label="E-posta" required>
+              <Input
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="ornek@eposta.com"
+              />
+            </Field>
+          </>
         )}
-        <Field label="E-posta" required>
-          <Input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="ornek@eposta.com"
-          />
-        </Field>
         <Field label="Şifre" required>
           <Input
             name="password"
             type="password"
             required
+            minLength={isLogin ? undefined : 6}
             autoComplete={isLogin ? "current-password" : "new-password"}
             placeholder="••••••••"
           />

@@ -216,3 +216,28 @@ drop policy if exists "public read book-images" on storage.objects;
 create policy "public read book-images" on storage.objects for select
   to public
   using (bucket_id = 'book-images');
+
+-- ============================================================================
+-- 6. KULLANICI ADIYLA GİRİŞ
+-- ============================================================================
+-- Kullanıcı adı büyük/küçük harf duyarsız benzersizdir; girişte kullanıcı
+-- adından hesap bulunabilmesi için şart. NULL'lar çakışmaz (kullanıcı adı
+-- olmayan eski hesaplar yalnızca e-postayla giriş yapar).
+create unique index if not exists profiles_username_lower_key
+  on public.profiles (lower(username));
+
+-- Kullanıcı adından hesap kimliği (e-posta DEĞİL). Yalnızca service_role
+-- çalıştırabilir: anon/authenticated'a açık olsaydı PostgREST üzerinden
+-- herkes çağırabilirdi. service_role RLS'i zaten aştığı için security
+-- definer gerekmiyor.
+create or replace function public.user_id_for_username(p_username text)
+returns uuid
+language sql
+stable
+set search_path = ''
+as $$
+  select id from public.profiles where lower(username) = lower(p_username)
+$$;
+
+revoke all on function public.user_id_for_username(text) from public, anon, authenticated;
+grant execute on function public.user_id_for_username(text) to service_role;
