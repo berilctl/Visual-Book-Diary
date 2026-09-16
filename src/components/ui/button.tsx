@@ -9,7 +9,7 @@ export type ButtonVariant =
   | "danger"
   | "dangerQuiet";
 
-export type ButtonSize = "sm" | "md";
+export type ButtonSize = "sm" | "md" | "icon";
 
 const BASE =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium " +
@@ -20,6 +20,10 @@ const BASE =
 const SIZES: Record<ButtonSize, string> = {
   sm: "min-h-8 px-2.5 text-xs",
   md: "min-h-10 px-4 text-sm",
+  // Kare, yalnızca ikon içeren buton. Padding yok: dışarıdan `px-0` ile
+  // ezmek güvenilir değil — aynı özgüllükteki px-4 CSS sırasına göre
+  // kazanabiliyor (tema anahtarında ikonu 8px'e sıkıştırmıştı).
+  icon: "size-10",
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {

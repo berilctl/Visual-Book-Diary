@@ -30,10 +30,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label="Açık/koyu temayı değiştir"
       title="Açık/koyu temayı değiştir"
-      className={buttonClass({
-        variant: "ghost",
-        className: "w-10 px-0",
-      })}
+      className={buttonClass({ variant: "ghost", size: "icon" })}
     >
       <SunIcon className="hidden size-5 dark:block" />
       <MoonIcon className="size-5 dark:hidden" />

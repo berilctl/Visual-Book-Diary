@@ -32,7 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // suppressHydrationWarning: THEME_SCRIPT hydration'dan önce <html>'e
+    // data-theme yazıyor; sunucu HTML'inde olmadığı için React uyarı verirdi.
+    // Yalnızca bu elemanın kendi özelliklerini kapsar, alt ağacı değil.
     <html
+      suppressHydrationWarning
       lang="tr"
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
