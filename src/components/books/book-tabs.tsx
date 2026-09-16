@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { EntityGrid } from "@/components/entities/entity-grid";
 import { QuoteList } from "@/components/quotes/quote-list";
 import type { Entity } from "@/lib/entities";
@@ -27,6 +27,26 @@ export function BookTabs({
 }) {
   const [active, setActive] = useState<TabKey>("characters");
 
+  // Roving tabindex: şeride tek Tab durağı düşer, sekmeler arası geçiş ok
+  // tuşlarıyla yapılır (WAI-ARIA tabs deseni).
+  const tabRefs = useRef<Partial<Record<TabKey, HTMLButtonElement | null>>>({});
+
+  function handleTabKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const current = TABS.findIndex((tab) => tab.key === active);
+    let next: number;
+    if (event.key === "ArrowRight") next = (current + 1) % TABS.length;
+    else if (event.key === "ArrowLeft")
+      next = (current - 1 + TABS.length) % TABS.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = TABS.length - 1;
+    else return;
+
+    event.preventDefault();
+    const key = TABS[next].key;
+    setActive(key);
+    tabRefs.current[key]?.focus();
+  }
+
   const counts: Record<TabKey, number> = {
     characters: characters.length,
     locations: locations.length,
@@ -42,6 +62,7 @@ export function BookTabs({
       <div
         role="tablist"
         aria-label="Kitap içeriği"
+        onKeyDown={handleTabKeyDown}
         className="flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)]"
       >
         {TABS.map((tab) => {
@@ -51,8 +72,12 @@ export function BookTabs({
             <button
               key={tab.key}
               id={`tab-${tab.key}`}
+              ref={(el) => {
+                tabRefs.current[tab.key] = el;
+              }}
               role="tab"
               aria-selected={selected}
+              tabIndex={selected ? 0 : -1}
               aria-controls={`panel-${tab.key}`}
               onClick={() => setActive(tab.key)}
               className={`flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-2.5 text-sm font-medium transition sm:px-4 ${

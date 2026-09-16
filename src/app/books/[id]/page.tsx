@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Book } from "@/lib/books";
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
-import { BrandMark } from "@/components/brand";
-import { LogoutButton } from "@/components/logout-button";
+import { AppHeader } from "@/components/app-header";
 import { BookTabs } from "@/components/books/book-tabs";
 import { StatusBadge } from "@/components/books/status-badge";
 
@@ -67,13 +66,7 @@ export default async function BookDetailPage({
 
   return (
     <main className="flex flex-1 flex-col">
-      {/* Dashboard ile aynı üst bar — uygulama içinde tutarlı çerçeve. */}
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <BrandMark iconClassName="size-9" textClassName="text-base" />
-          <LogoutButton />
-        </div>
-      </header>
+      <AppHeader />
 
       {/* Kitap künyesi. İçerik bölümüyle aynı max-w-5xl kabında; daha önce
           sayfa kenarına yaslanıp alttaki içerikle hizasız duruyordu. */}
