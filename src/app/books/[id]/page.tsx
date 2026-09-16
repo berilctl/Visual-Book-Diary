@@ -6,6 +6,7 @@ import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
 import { AppHeader } from "@/components/app-header";
 import { BookCover } from "@/components/books/book-cover";
+import { BookProgress } from "@/components/books/book-progress";
 import { BookTabs } from "@/components/books/book-tabs";
 import { StatusBadge } from "@/components/books/status-badge";
 import { formatDate } from "@/lib/format";
@@ -99,6 +100,10 @@ export default async function BookDetailPage({
                     {t.book.startedOn(started)}
                   </span>
                 )}
+              </div>
+
+              <div className="mt-5 flex flex-col items-start gap-2 empty:hidden">
+                <BookProgress book={book} variant="hero" />
               </div>
             </div>
           </div>

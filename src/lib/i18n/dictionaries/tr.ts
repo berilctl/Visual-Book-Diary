@@ -122,6 +122,25 @@ export const tr = {
       "olarak silinecek. Bu işlem geri alınamaz.\n\nDevam edilsin mi?",
   },
 
+  finish: {
+    cta: "Bitirdim",
+    finishedOn: (date: string) => `Bitirdi: ${date}`,
+    celebrateTitle: "Tebrikler, bitirdin!",
+    celebrateLead: (title: string) =>
+      `"${title}" tamamlandı olarak işaretlendi. Nasıldı?`,
+    later: "Şimdi değil",
+    saveRating: "Puanı kaydet",
+  },
+
+  rating: {
+    label: "Puan",
+    star: (n: number) => `${n} yıldız`,
+    outOfFive: (n: number) => `5 üzerinden ${n} yıldız`,
+    notRated: "Henüz puan verilmedi",
+    invalid: "Geçersiz puan.",
+    onlyCompleted: "Yalnızca tamamlanan kitaplar puanlanabilir.",
+  },
+
   bookStatus: {
     reading: "Okunuyor",
     completed: "Tamamlandı",

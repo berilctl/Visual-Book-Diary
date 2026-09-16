@@ -7,6 +7,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { cardClass } from "@/components/ui/card";
 import { BookCover } from "./book-cover";
 import { BookFormDialog } from "./book-form-dialog";
+import { BookProgress } from "./book-progress";
 import { DeleteBookButton } from "./delete-book-button";
 import { StatusBadge } from "./status-badge";
 
@@ -75,6 +76,12 @@ export function BookCard({
             {counts.length > 0 ? counts.join(" · ") : t.book.noContent}
           </p>
         </Link>
+
+        {/* Linkin DIŞINDA: link içinde buton geçersiz HTML olurdu ve tıklama
+            sayfaya giderdi. */}
+        <div className="mt-3 flex flex-col gap-1.5 empty:hidden">
+          <BookProgress book={book} variant="card" />
+        </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
           <BookFormDialog

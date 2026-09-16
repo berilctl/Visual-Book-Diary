@@ -82,3 +82,32 @@ export function MoonIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m4.5 12.5 5 5 10-11" />
+    </Icon>
+  );
+}
+
+// filled: dolu yıldız (puan), aksi hâlde yalnızca kontur.
+export function StarIcon({
+  filled = false,
+  className = "size-5",
+  strokeWidth = 1.5,
+}: IconProps & { filled?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8L12 3.2Z" />
+    </svg>
+  );
+}

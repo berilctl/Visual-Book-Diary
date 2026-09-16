@@ -125,6 +125,25 @@ export const en: Dictionary = {
       "deleted too. This can't be undone.\n\nContinue?",
   },
 
+  finish: {
+    cta: "I finished it",
+    finishedOn: (date) => `Finished ${date}`,
+    celebrateTitle: "Congratulations, you finished it!",
+    celebrateLead: (title) =>
+      `"${title}" is now marked as finished. How was it?`,
+    later: "Not now",
+    saveRating: "Save rating",
+  },
+
+  rating: {
+    label: "Rating",
+    star: (n) => plural(n, "star", "stars"),
+    outOfFive: (n) => `${plural(n, "star", "stars")} out of 5`,
+    notRated: "Not rated yet",
+    invalid: "Invalid rating.",
+    onlyCompleted: "Only finished books can be rated.",
+  },
+
   bookStatus: {
     reading: "Reading",
     completed: "Finished",

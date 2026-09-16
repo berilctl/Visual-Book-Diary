@@ -36,6 +36,8 @@ create table if not exists public.books (
   status      text        not null default 'reading'
                           check (status in ('reading', 'completed', 'want_to_read', 'paused', 'dnf')),
   cover_url   text,                       -- kapak görseli, Supabase Storage public URL
+  rating      smallint    check (rating between 1 and 5),  -- yalnızca tamamlanan kitaplar
+  finished_at date,                       -- "Bitirdim" günü (kullanıcının yerel tarihi)
   created_at  timestamptz default now()
 );
 

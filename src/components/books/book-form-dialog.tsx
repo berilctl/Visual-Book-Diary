@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createBook, updateBook } from "@/app/actions/books";
 import { BOOK_STATUSES } from "@/lib/books";
+import { localISODate } from "@/lib/format";
 import {
   IMAGE_ACCEPT,
   IMAGE_MAX_MB,
@@ -132,6 +133,8 @@ export function BookFormDialog({
     event.preventDefault();
     setError(null);
     const formData = new FormData(event.currentTarget);
+    // Elle "Tamamlandı" seçilirse bitiş günü kullanıcının yerel günü olsun.
+    formData.set("today", localISODate());
 
     // Dosya baytları Server Action'a gönderilmez; ayrı upload rotasına gider.
     const file = formData.get("cover");
