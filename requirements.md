@@ -57,6 +57,7 @@ Bu kişisel ölçekli bir projedir; düşük hacimli görsel yükleme ve tek kul
 | author | text | NOT NULL |
 | start_date | date | |
 | status | text | NOT NULL, `default 'reading'`, `CHECK (status in ('reading','completed','want_to_read','paused','dnf'))` |
+| cover_url | text | Kapak görseli, Supabase Storage public URL. Yalnızca kullanıcının `{userId}/{bookId}/` klasöründen kabul edilir (migration 002) |
 | created_at | timestamptz | `default now()` |
 
 İndeks: `user_id`.

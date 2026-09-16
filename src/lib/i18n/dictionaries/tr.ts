@@ -104,6 +104,13 @@ export const tr = {
     authorPlaceholder: "örn. Bram Stoker",
     startDate: "Başlangıç tarihi",
     status: "Durum",
+    cover: "Kapak",
+    chooseCover: "Kapak Seç",
+    changeCover: "Değiştir",
+    removeCover: "Kaldır",
+    coverHint: (mb: number) => `PNG, JPEG veya WEBP · en fazla ${mb} MB`,
+    coverFailedBookSaved:
+      "Kitap eklendi ama kapak yüklenemedi. Tekrar deneyebilir ya da pencereyi kapatıp kapağı sonra ekleyebilirsin.",
     titleAuthorRequired: "Kitap adı ve yazar zorunludur.",
     backToLibrary: "← Kitaplığa dön",
     startedOn: (date: string) => `Başlangıç: ${date}`,

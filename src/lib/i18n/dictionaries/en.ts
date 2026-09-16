@@ -107,6 +107,13 @@ export const en: Dictionary = {
     authorPlaceholder: "e.g. Bram Stoker",
     startDate: "Start date",
     status: "Status",
+    cover: "Cover",
+    chooseCover: "Choose Cover",
+    changeCover: "Change",
+    removeCover: "Remove",
+    coverHint: (mb) => `PNG, JPEG or WEBP · up to ${mb} MB`,
+    coverFailedBookSaved:
+      "The book was added, but the cover couldn't be uploaded. Try again, or close this and add the cover later.",
     titleAuthorRequired: "Title and author are required.",
     backToLibrary: "← Back to library",
     startedOn: (date) => `Started ${date}`,

@@ -5,6 +5,7 @@ import type { Book } from "@/lib/books";
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
 import { AppHeader } from "@/components/app-header";
+import { BookCover } from "@/components/books/book-cover";
 import { BookTabs } from "@/components/books/book-tabs";
 import { StatusBadge } from "@/components/books/status-badge";
 import { formatDate } from "@/lib/format";
@@ -75,16 +76,31 @@ export default async function BookDetailPage({
             {t.book.backToLibrary}
           </Link>
 
-          <h1 className="mt-4 text-4xl leading-tight text-ink">{book.title}</h1>
-          <p className="mt-2 text-base text-ink-muted">{book.author}</p>
+          <div className="mt-5 flex items-start gap-5 sm:gap-8">
+            <BookCover
+              seed={book.id}
+              title={book.title}
+              author={book.author}
+              coverUrl={book.cover_url}
+              size="hero"
+              className="w-24 shrink-0 rounded-lg shadow-lift sm:w-36"
+            />
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <StatusBadge status={book.status} />
-            {started && (
-              <span className="text-sm text-ink-subtle">
-                {t.book.startedOn(started)}
-              </span>
-            )}
+            <div className="min-w-0 pt-1">
+              <h1 className="break-words text-3xl leading-tight text-ink sm:text-4xl">
+                {book.title}
+              </h1>
+              <p className="mt-2 text-base text-ink-muted">{book.author}</p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <StatusBadge status={book.status} />
+                {started && (
+                  <span className="text-sm text-ink-subtle">
+                    {t.book.startedOn(started)}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

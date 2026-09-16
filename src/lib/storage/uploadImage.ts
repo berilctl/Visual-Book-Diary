@@ -1,9 +1,8 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { BOOK_IMAGES_BUCKET as BUCKET } from "./url";
 
 // Tüm görsel yüklemeleri bu tek fonksiyondan geçer (PRD Bölüm 6.1).
-
-const BUCKET = "book-images";
 
 // İçerik tipinden dosya uzantısı. Yüklenen dosya png/jpeg/webp olabileceğinden
 // gerçek tipi koruyup doğru uzantıyı seçiyoruz.

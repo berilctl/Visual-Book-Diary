@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createBook } from "@/app/actions/books";
 import { AppHeader } from "@/components/app-header";
 import { BookFormDialog } from "@/components/books/book-form-dialog";
 import { BookCard, type BookSummary } from "@/components/books/book-card";
@@ -27,20 +26,15 @@ export default async function DashboardPage() {
   const t = await getDictionary();
   const displayName = profile?.username ?? user.email ?? t.dashboard.fallbackName;
 
-  // Kitaplar + kart özetleri. Alt tablolar kitap başına değil, tek seferde
+  // Kitaplar + kart sayıları. Alt tablolar kitap başına değil, tek seferde
   // çekilip JS'te gruplanır (N+1 yok); RLS zaten yalnızca kullanıcının
-  // satırlarını döndürdüğü için filtreye gerek kalmıyor.
+  // satırlarını döndürdüğü için filtreye gerek kalmıyor. Kartın görseli artık
+  // kitabın kendi kapağı; karakter/mekan görsellerini çekmeye gerek yok.
   const [{ data: books }, { data: characters }, { data: locations }, { data: quotes }] =
     await Promise.all([
       supabase.from("books").select("*").order("created_at", { ascending: false }),
-      supabase
-        .from("characters")
-        .select("book_id, image_url")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("locations")
-        .select("book_id, image_url")
-        .order("created_at", { ascending: false }),
+      supabase.from("characters").select("book_id"),
+      supabase.from("locations").select("book_id"),
       supabase.from("quotes").select("book_id"),
     ]);
 
@@ -50,27 +44,17 @@ export default async function DashboardPage() {
   const summaryFor = (bookId: string) => {
     let entry = summaries.get(bookId);
     if (!entry) {
-      entry = { images: [], characters: 0, locations: 0, quotes: 0 };
+      entry = { characters: 0, locations: 0, quotes: 0 };
       summaries.set(bookId, entry);
     }
     return entry;
   };
 
-  for (const row of (characters ?? []) as {
-    book_id: string;
-    image_url: string | null;
-  }[]) {
-    const entry = summaryFor(row.book_id);
-    entry.characters += 1;
-    if (row.image_url) entry.images.push(row.image_url);
+  for (const row of (characters ?? []) as { book_id: string }[]) {
+    summaryFor(row.book_id).characters += 1;
   }
-  for (const row of (locations ?? []) as {
-    book_id: string;
-    image_url: string | null;
-  }[]) {
-    const entry = summaryFor(row.book_id);
-    entry.locations += 1;
-    if (row.image_url) entry.images.push(row.image_url);
+  for (const row of (locations ?? []) as { book_id: string }[]) {
+    summaryFor(row.book_id).locations += 1;
   }
   for (const row of (quotes ?? []) as { book_id: string }[]) {
     summaryFor(row.book_id).quotes += 1;
@@ -78,7 +62,6 @@ export default async function DashboardPage() {
 
   const addButton = (
     <BookFormDialog
-      action={createBook}
       heading={t.book.addTitle}
       submitLabel={t.common.add}
       triggerLabel={t.book.addCta}
@@ -108,7 +91,7 @@ export default async function DashboardPage() {
             action={addButton}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
             {list.map((book) => (
               <BookCard
                 key={book.id}

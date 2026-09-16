@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { updateBook } from "@/app/actions/books";
 import type { Book } from "@/lib/books";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/components/i18n-provider";
@@ -11,21 +10,16 @@ import { BookFormDialog } from "./book-form-dialog";
 import { DeleteBookButton } from "./delete-book-button";
 import { StatusBadge } from "./status-badge";
 
-// Kartta gösterilecek özet: kapak görselleri + içerik sayıları.
+// Kartta gösterilecek içerik sayıları.
 export type BookSummary = {
-  images: string[];
   characters: number;
   locations: number;
   quotes: number;
 };
 
-const EMPTY_SUMMARY: BookSummary = {
-  images: [],
-  characters: 0,
-  locations: 0,
-  quotes: 0,
-};
+const EMPTY_SUMMARY: BookSummary = { characters: 0, locations: 0, quotes: 0 };
 
+// Dikey, kapak odaklı kart — kitaplık bir raf gibi görünsün.
 // Client Component: seçili dile göre tarih biçimi ve çoğul sayılar
 // sözlükteki fonksiyonlarla üretiliyor (fonksiyonlar sunucudan prop olarak
 // aktarılamaz).
@@ -49,32 +43,41 @@ export function BookCard({
     <article
       className={`group flex flex-col overflow-hidden transition hover:shadow-lift ${cardClass}`}
     >
-      <Link href={`/books/${book.id}`} className="block" tabIndex={-1}>
-        <BookCover bookId={book.id} images={summary.images} />
+      {/* Kapak linki klavye sırasından çıkarıldı: aynı hedefe giden başlık
+          linki zaten var, kapak dekoratif (alt=""). */}
+      <Link href={`/books/${book.id}`} tabIndex={-1} className="block">
+        <BookCover
+          seed={book.id}
+          title={book.title}
+          author={book.author}
+          coverUrl={book.cover_url}
+          className="transition duration-300 group-hover:brightness-[1.03]"
+        />
       </Link>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-4">
         <Link href={`/books/${book.id}`} className="block flex-1">
-          <h3 className="font-serif text-lg leading-snug text-ink group-hover:underline">
+          <h3 className="line-clamp-2 font-serif text-base leading-snug text-ink group-hover:underline">
             {book.title}
           </h3>
-          <p className="mt-1 text-sm text-ink-muted">{book.author}</p>
+          <p className="mt-0.5 line-clamp-1 text-sm text-ink-muted">
+            {book.author}
+          </p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
             <StatusBadge status={book.status} />
             {started && (
               <span className="text-xs text-ink-subtle">{started}</span>
             )}
           </div>
 
-          <p className="mt-3 text-xs text-ink-subtle">
+          <p className="mt-2 text-xs text-ink-subtle">
             {counts.length > 0 ? counts.join(" · ") : t.book.noContent}
           </p>
         </Link>
 
-        <div className="mt-4 flex items-center gap-2 border-t border-line pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
           <BookFormDialog
-            action={updateBook}
             heading={t.book.editTitle}
             submitLabel={t.common.save}
             triggerLabel={t.common.edit}

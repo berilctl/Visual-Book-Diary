@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isEntityKind } from "@/lib/entities";
 import { getDictionary } from "@/lib/i18n/server";
+import { removeImages } from "@/lib/storage/cleanup";
+import { ownImagePath } from "@/lib/storage/url";
 
 export type EntityFormState = { ok?: boolean; error?: string } | undefined;
 
@@ -55,13 +57,12 @@ export async function createEntity(
   const tags = parseTags(String(formData.get("tags") ?? ""));
   const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
 
-  // image_url yalnızca kendi Storage bucket'ımızdan gelebilir (PRD Bölüm 8 —
-  // harici/URL yok). Prefix env'den türetilir, hardcode edilmez.
-  if (imageUrl) {
-    const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "")}/storage/v1/object/public/book-images/`;
-    if (!imageUrl.startsWith(storagePrefix)) {
-      return { error: t.errors.invalidImageSource };
-    }
+  // image_url yalnızca kullanıcının bu kitaba ait Storage klasöründen gelebilir
+  // (PRD Bölüm 8 — harici/URL yok). Önceden yalnızca bucket ön eki kontrol
+  // ediliyordu; başka kullanıcının görsel adresi de kabul ediliyordu.
+  const imagePath = imageUrl ? ownImagePath(imageUrl, user.id, bookId) : null;
+  if (imageUrl && !imagePath) {
+    return { error: t.errors.invalidImageSource };
   }
 
   const { error } = await supabase.from(kind).insert({
@@ -71,7 +72,11 @@ export async function createEntity(
     image_url: imageUrl,
     tags,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    // Yüklenen görsel hiçbir satıra bağlanamadı: sahipsiz kalmasın.
+    await removeImages(supabase, [imagePath]);
+    return { error: error.message };
+  }
 
   revalidatePath(`/books/${bookId}`);
   return { ok: true };
@@ -118,24 +123,43 @@ export async function updateEntity(
   const updates: Record<string, unknown> = { name, description, tags };
 
   // image_url yalnızca yeni görsel verildiyse güncellenir; verildiyse de
-  // sadece kendi Storage bucket'ımızdan gelebilir (createEntity ile aynı).
+  // sadece kullanıcının bu kitaba ait klasöründen gelebilir (createEntity ile aynı).
   const imageUrl = String(formData.get("image_url") ?? "").trim();
+  const imagePath = imageUrl ? ownImagePath(imageUrl, user.id, bookId) : null;
+  let previousImage: string | null = null;
   if (imageUrl) {
-    const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "")}/storage/v1/object/public/book-images/`;
-    if (!imageUrl.startsWith(storagePrefix)) {
+    if (!imagePath) {
       return { error: t.errors.invalidImageSource };
     }
     updates.image_url = imageUrl;
+
+    // Güncellemeden sonra silinecek eski görseli önce oku.
+    const { data: current } = await supabase
+      .from(kind)
+      .select("image_url")
+      .eq("id", id)
+      .maybeSingle();
+    previousImage = current?.image_url ?? null;
   }
 
   const { error } = await supabase.from(kind).update(updates).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    await removeImages(supabase, [imagePath]);
+    return { error: error.message };
+  }
+
+  // Değiştirilen eski görsel artık kullanılmıyor. Kapsam kullanıcı klasörü:
+  // satırın kitabı formdaki bookId'den bağımsız doğrulanmış olmayabilir.
+  if (previousImage && previousImage !== imageUrl) {
+    await removeImages(supabase, [ownImagePath(previousImage, user.id)]);
+  }
 
   revalidatePath(`/books/${bookId}`);
   return { ok: true };
 }
 
-// Karakter/mekan kartı sil. RLS sahipliği zorunlu kılar.
+// Karakter/mekan kartı sil. RLS sahipliği zorunlu kılar; kartın görseli de
+// Storage'dan silinir.
 export async function deleteEntity(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {
@@ -150,7 +174,22 @@ export async function deleteEntity(formData: FormData): Promise<void> {
   const bookId = String(formData.get("book_id") ?? "").trim();
   if (!id) return;
 
-  await supabase.from(kind).delete().eq("id", id);
+  // .select: gerçekten silinen satırın görselini döndürür (RLS başkasının
+  // kartını 0 satırla reddeder; o durumda hiçbir dosyaya dokunulmaz).
+  const { data: deleted, error } = await supabase
+    .from(kind)
+    .delete()
+    .eq("id", id)
+    .select("image_url");
+
+  if (!error && deleted) {
+    await removeImages(
+      supabase,
+      deleted.map((row) =>
+        row.image_url ? ownImagePath(row.image_url, user.id) : null,
+      ),
+    );
+  }
 
   if (bookId) revalidatePath(`/books/${bookId}`);
 }

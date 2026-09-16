@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { uploadImage } from "@/lib/storage/uploadImage";
 import { getDictionary } from "@/lib/i18n/server";
+import { IMAGE_MAX_MB, imageFileProblem } from "@/lib/storage/limits";
 
 // Yükleme + Storage yazımı için zaman marjı.
 export const maxDuration = 30;
 
-const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-const MAX_MB = 5;
-const MAX_BYTES = MAX_MB * 1024 * 1024;
 
 // Dosya yükleme (PRD Bölüm 6.2).
 // Akış: oturum kontrolü -> book_id sahipliği -> tip/boyut validasyonu ->
@@ -59,19 +57,18 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Tip ve boyut validasyonu (server-side).
-  if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json(
-      { error: t.upload.badType },
-      { status: 415 },
-    );
+  // 3. Tip ve boyut validasyonu (server-side). Kurallar lib/storage/limits.ts'te;
+  // formlar aynı kuralla erken uyarı verir ama yetki buradadır.
+  const problem = imageFileProblem(file);
+  if (problem === "type") {
+    return NextResponse.json({ error: t.upload.badType }, { status: 415 });
   }
-  if (file.size === 0) {
+  if (problem === "empty") {
     return NextResponse.json({ error: t.upload.emptyFile }, { status: 400 });
   }
-  if (file.size > MAX_BYTES) {
+  if (problem === "size") {
     return NextResponse.json(
-      { error: t.upload.tooLarge(MAX_MB) },
+      { error: t.upload.tooLarge(IMAGE_MAX_MB) },
       { status: 413 },
     );
   }

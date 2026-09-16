@@ -11,9 +11,11 @@ export type ButtonVariant =
 
 export type ButtonSize = "sm" | "md" | "icon";
 
+// whitespace-nowrap: dar ekranda buton metni iki satıra kırılmasın
+// ("Sign Out" mobil üst barda kırılıyordu).
 const BASE =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium " +
-  "transition disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg " +
+  "font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
 
 // min-h değerleri WCAG 2.2 "Target Size (Minimum)" 24px eşiğini rahat geçer;
 // kart içindeki küçük aksiyonlar bile artık 32px yüksekliğinde.

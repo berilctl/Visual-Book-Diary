@@ -1,38 +1,44 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import type { BookFormState } from "@/app/actions/books";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { createBook, updateBook } from "@/app/actions/books";
 import { BOOK_STATUSES } from "@/lib/books";
+import {
+  IMAGE_ACCEPT,
+  IMAGE_MAX_MB,
+  imageFileProblem,
+  type ImageFileProblem,
+} from "@/lib/storage/limits";
 import { useI18n } from "@/components/i18n-provider";
 import { buttonClass, type ButtonVariant } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
-
-type Action = (
-  prev: BookFormState,
-  formData: FormData,
-) => Promise<BookFormState>;
+import { BookCover } from "./book-cover";
 
 type Props = {
-  action: Action;
   heading: string;
   submitLabel: string;
   triggerLabel: string;
   triggerVariant?: ButtonVariant;
-  // Düzenleme modu için:
+  // Verilirse düzenleme modu:
   bookId?: string;
   initial?: {
     title?: string;
     author?: string;
     start_date?: string | null;
     status?: string;
+    cover_url?: string | null;
   };
 };
 
-// Kitap ekleme VE düzenleme için ortak modal + form. Server Action'ı bir
-// event handler içinde çağırır; hata varsa gösterir, başarıda modalı kapatır.
+// Kitap ekleme VE düzenleme için ortak modal + form (bookId varsa düzenleme).
+//
+// Kapak akışı: yükleme hattı görseli var olan bir kitabın klasörüne yazdığı
+// için ekleme sırası "kitabı oluştur -> kapağı yükle -> kitaba bağla".
+// Kitap oluşup kapak yüklemesi başarısız olursa kitap zaten kaydedilmiştir;
+// kullanıcı tekrar "Ekle"ye basarsa ikinci bir kitap açılmasın diye oluşan
+// kitabın kimliği (createdId) saklanır ve sonraki deneme onu günceller.
 export function BookFormDialog({
-  action,
   heading,
   submitLabel,
   triggerLabel,
@@ -44,25 +50,162 @@ export function BookFormDialog({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [createdId, setCreatedId] = useState<string | null>(null);
+
+  // Kapak seçimi. previewUrl bir object URL; ref kopyası, bileşen kaldırılırken
+  // serbest bırakmak için (efekt içinde state okunmaz/yazılmaz).
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [removeCover, setRemoveCover] = useState(false);
+
+  useEffect(
+    () => () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    },
+    [],
+  );
+
+  function replacePreview(next: string | null) {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = next;
+    setPreviewUrl(next);
+  }
+
+  function resetCover() {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    replacePreview(null);
+    setFileName(null);
+    setRemoveCover(false);
+  }
 
   function openDialog() {
     setError(null);
+    setCreatedId(null);
+    resetCover();
     setOpen(true);
+  }
+
+  function closeDialog() {
+    setOpen(false);
+    resetCover();
+  }
+
+  function problemMessage(problem: ImageFileProblem) {
+    if (problem === "type") return t.upload.badType;
+    if (problem === "empty") return t.upload.emptyFile;
+    return t.upload.tooLarge(IMAGE_MAX_MB);
+  }
+
+  // Tip/boyut kitap oluşturulmadan ÖNCE kontrol edilir: en sık hatalar
+  // yakalanır ve "kitap eklendi ama kapak yok" durumu çoğunlukla hiç oluşmaz.
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    setError(null);
+    if (!file) return;
+
+    const problem = imageFileProblem(file);
+    if (problem) {
+      event.target.value = "";
+      setError(problemMessage(problem));
+      return;
+    }
+    replacePreview(URL.createObjectURL(file));
+    setFileName(file.name);
+    setRemoveCover(false);
+  }
+
+  // Yeni seçilen dosya varsa onu geri alır (mevcut kapak geri görünür);
+  // yoksa mevcut kapağı kaldırılacak olarak işaretler.
+  function handleRemoveCover() {
+    if (previewUrl) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      replacePreview(null);
+      setFileName(null);
+    } else {
+      setRemoveCover(true);
+    }
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
     const formData = new FormData(event.currentTarget);
+
+    // Dosya baytları Server Action'a gönderilmez; ayrı upload rotasına gider.
+    const file = formData.get("cover");
+    formData.delete("cover");
+    const coverFile = file instanceof File && file.size > 0 ? file : null;
+
     startTransition(async () => {
-      const result = await action(undefined, formData);
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        // Başarılı: revalidatePath dashboard'u tazeler, modalı kapat.
-        setOpen(false);
+      if (coverFile) {
+        const problem = imageFileProblem(coverFile);
+        if (problem) {
+          setError(problemMessage(problem));
+          return;
+        }
       }
+
+      const retryAfterCreate = !bookId && createdId !== null;
+      let id = bookId ?? createdId;
+
+      // 1. Ekleme: kitabı oluştur (önceki denemede oluşmadıysa).
+      if (!id) {
+        const created = await createBook(undefined, formData);
+        if (created?.error || !created?.id) {
+          setError(created?.error ?? t.errors.serviceUnavailable);
+          return;
+        }
+        id = created.id;
+        setCreatedId(id);
+      }
+
+      // 2. Kapak seçildiyse yükle.
+      let coverUrl = "";
+      if (coverFile) {
+        const upload = new FormData();
+        upload.set("book_id", id);
+        upload.set("file", coverFile);
+        let message: string = t.upload.failed;
+        try {
+          const res = await fetch("/api/upload-image", {
+            method: "POST",
+            body: upload,
+          });
+          const json = await res.json();
+          if (res.ok) coverUrl = json.url;
+          else if (json.error) message = json.error;
+        } catch {
+          // Ağ hatası: genel mesaj kalır.
+        }
+        if (!coverUrl) {
+          setError(bookId ? message : t.book.coverFailedBookSaved);
+          return;
+        }
+      }
+
+      // 3. Düzenleme; ya da kapak eklenecek/kaldırılacak; ya da önceki denemede
+      //    oluşan kitaba form değişiklikleri uygulanacak.
+      if (bookId || coverUrl || retryAfterCreate) {
+        formData.set("id", id);
+        if (coverUrl) formData.set("cover_url", coverUrl);
+        else if (removeCover) formData.set("remove_cover", "1");
+
+        const updated = await updateBook(undefined, formData);
+        if (updated?.error) {
+          setError(updated.error);
+          return;
+        }
+      }
+
+      // Başarılı: revalidatePath sayfaları tazeler, modalı kapat.
+      closeDialog();
     });
   }
+
+  const shownCover =
+    previewUrl ?? (removeCover ? null : (initial?.cover_url ?? null));
 
   return (
     <>
@@ -77,7 +220,7 @@ export function BookFormDialog({
         {triggerLabel}
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} heading={heading}>
+      <Modal open={open} onClose={closeDialog} heading={heading}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {bookId && <input type="hidden" name="id" value={bookId} />}
 
@@ -117,6 +260,52 @@ export function BookFormDialog({
             </Select>
           </Field>
 
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-ink">{t.book.cover}</span>
+            <div className="flex items-center gap-4">
+              <BookCover
+                seed={bookId ?? "new"}
+                coverUrl={shownCover}
+                size="thumb"
+                className="w-16 shrink-0 rounded-md border border-line"
+              />
+              <div className="flex min-w-0 flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  name="cover"
+                  accept={IMAGE_ACCEPT}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={buttonClass({ variant: "secondary", size: "sm" })}
+                  >
+                    {shownCover ? t.book.changeCover : t.book.chooseCover}
+                  </button>
+                  {shownCover && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCover}
+                      className={buttonClass({
+                        variant: "dangerQuiet",
+                        size: "sm",
+                      })}
+                    >
+                      {t.book.removeCover}
+                    </button>
+                  )}
+                </div>
+                <span className="truncate text-xs text-ink-subtle">
+                  {fileName ?? t.book.coverHint(IMAGE_MAX_MB)}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {error && (
             <p className="text-sm text-danger" role="alert">
               {error}
@@ -126,16 +315,12 @@ export function BookFormDialog({
           <ModalActions>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={closeDialog}
               className={buttonClass({ variant: "secondary" })}
             >
               {t.common.cancel}
             </button>
-            <button
-              type="submit"
-              disabled={pending}
-              className={buttonClass()}
-            >
+            <button type="submit" disabled={pending} className={buttonClass()}>
               {pending ? t.common.saving : submitLabel}
             </button>
           </ModalActions>

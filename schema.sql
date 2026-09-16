@@ -35,6 +35,7 @@ create table if not exists public.books (
   start_date  date,
   status      text        not null default 'reading'
                           check (status in ('reading', 'completed', 'want_to_read', 'paused', 'dnf')),
+  cover_url   text,                       -- kapak görseli, Supabase Storage public URL
   created_at  timestamptz default now()
 );
 

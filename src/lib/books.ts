@@ -18,6 +18,8 @@ export type Book = {
   author: string;
   start_date: string | null;
   status: BookStatus;
+  // Migration 002 öncesi veritabanlarında sütun yok; o durumda undefined gelir.
+  cover_url?: string | null;
   created_at: string;
 };
 
