@@ -7,6 +7,7 @@ import { BookCard, type BookSummary } from "@/components/books/book-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookIcon } from "@/components/ui/icons";
 import type { Book } from "@/lib/books";
+import { getDictionary } from "@/lib/i18n/server";
 
 // /dashboard — kullanıcının kitaplığı (PRD Bölüm 7). RLS sayesinde yalnızca
 // kendi kitapları döner.
@@ -23,7 +24,8 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  const displayName = profile?.username ?? user.email ?? "okur";
+  const t = await getDictionary();
+  const displayName = profile?.username ?? user.email ?? t.dashboard.fallbackName;
 
   // Kitaplar + kart özetleri. Alt tablolar kitap başına değil, tek seferde
   // çekilip JS'te gruplanır (N+1 yok); RLS zaten yalnızca kullanıcının
@@ -77,9 +79,9 @@ export default async function DashboardPage() {
   const addButton = (
     <BookFormDialog
       action={createBook}
-      heading="Kitap Ekle"
-      submitLabel="Ekle"
-      triggerLabel="+ Kitap Ekle"
+      heading={t.book.addTitle}
+      submitLabel={t.common.add}
+      triggerLabel={t.book.addCta}
     />
   );
 
@@ -90,9 +92,9 @@ export default async function DashboardPage() {
       <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl text-ink">Kitaplığım</h1>
+            <h1 className="text-3xl text-ink">{t.dashboard.title}</h1>
             <p className="mt-1.5 text-sm text-ink-muted">
-              Merhaba {displayName} — {list.length} kitap
+              {t.dashboard.greeting(displayName, list.length)}
             </p>
           </div>
           {list.length > 0 && addButton}
@@ -101,8 +103,8 @@ export default async function DashboardPage() {
         {list.length === 0 ? (
           <EmptyState
             icon={<BookIcon className="size-7" strokeWidth={1.4} />}
-            title="Henüz kitabın yok"
-            hint="İlk kitabını ekleyerek karakterlerini, mekanlarını ve alıntılarını biriktirmeye başla."
+            title={t.dashboard.emptyTitle}
+            hint={t.dashboard.emptyHint}
             action={addButton}
           />
         ) : (

@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { uploadImage } from "@/lib/storage/uploadImage";
+import { getDictionary } from "@/lib/i18n/server";
 
-// PRD Bölüm 6.4 — yükleme + Storage yazımı için zaman marjı.
+// Yükleme + Storage yazımı için zaman marjı.
 export const maxDuration = 30;
 
 const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_MB = 5;
+const MAX_BYTES = MAX_MB * 1024 * 1024;
 
-// Giriş 1 — Dosya yükleme (PRD Bölüm 6.2).
+// Dosya yükleme (PRD Bölüm 6.2).
 // Akış: oturum kontrolü -> book_id sahipliği -> tip/boyut validasyonu ->
 // uploadImage() -> kalıcı public URL.
 export async function POST(request: Request) {
+  const t = await getDictionary();
   const supabase = await createClient();
 
   // 1. Kullanıcıyı doğrula.
@@ -19,7 +22,7 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Yetkisiz. Giriş gerekli." }, { status: 401 });
+    return NextResponse.json({ error: t.upload.unauthorized }, { status: 401 });
   }
 
   // İstek gövdesini çöz.
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
     formData = await request.formData();
   } catch {
     return NextResponse.json(
-      { error: "Geçersiz istek gövdesi (multipart/form-data bekleniyor)." },
+      { error: t.upload.badBody },
       { status: 400 },
     );
   }
@@ -37,10 +40,10 @@ export async function POST(request: Request) {
   const file = formData.get("file");
 
   if (!bookId) {
-    return NextResponse.json({ error: "book_id zorunludur." }, { status: 400 });
+    return NextResponse.json({ error: t.upload.bookIdRequired }, { status: 400 });
   }
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Dosya bulunamadı." }, { status: 400 });
+    return NextResponse.json({ error: t.upload.fileMissing }, { status: 400 });
   }
 
   // 2. book_id sahipliğini doğrula. RLS de korur; burada net 403 dönüyoruz.
@@ -51,7 +54,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (!book) {
     return NextResponse.json(
-      { error: "Kitap bulunamadı veya bu kitaba erişimin yok." },
+      { error: t.errors.bookNotFound },
       { status: 403 },
     );
   }
@@ -59,16 +62,16 @@ export async function POST(request: Request) {
   // 3. Tip ve boyut validasyonu (server-side).
   if (!ALLOWED_TYPES.has(file.type)) {
     return NextResponse.json(
-      { error: "Yalnızca PNG, JPEG veya WEBP yüklenebilir." },
+      { error: t.upload.badType },
       { status: 415 },
     );
   }
   if (file.size === 0) {
-    return NextResponse.json({ error: "Dosya boş." }, { status: 400 });
+    return NextResponse.json({ error: t.upload.emptyFile }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json(
-      { error: "Dosya 5 MB sınırını aşıyor." },
+      { error: t.upload.tooLarge(MAX_MB) },
       { status: 413 },
     );
   }
@@ -79,7 +82,9 @@ export async function POST(request: Request) {
     const url = await uploadImage(bytes, user.id, bookId, file.type);
     return NextResponse.json({ url }, { status: 201 });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Yükleme başarısız oldu.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Ham Storage hatası yalnızca sunucu loguna; istemciye iç ayrıntı
+    // (bucket/yol/politika mesajı) sızdırılmaz.
+    console.error("[upload-image]", e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: t.upload.failed }, { status: 500 });
   }
 }

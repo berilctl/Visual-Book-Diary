@@ -10,7 +10,8 @@ export const USERNAME_MAX = 30;
 
 export const USERNAME_PATTERN = `[A-Za-z0-9_.]{${USERNAME_MIN},${USERNAME_MAX}}`;
 
-export const USERNAME_HINT = `${USERNAME_MIN}–${USERNAME_MAX} karakter; harf, rakam, _ ve . kullanılabilir.`;
+// Kullanıcıya gösterilen kural metni sözlükte:
+// t.auth.usernameHint(USERNAME_MIN, USERNAME_MAX).
 
 const USERNAME_RE = new RegExp(`^${USERNAME_PATTERN}$`);
 

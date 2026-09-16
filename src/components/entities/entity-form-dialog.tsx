@@ -2,16 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createEntity, updateEntity } from "@/app/actions/entities";
-import { ENTITY_LABELS, type Entity, type EntityKind } from "@/lib/entities";
+import type { Entity, EntityKind } from "@/lib/entities";
+import { useI18n } from "@/components/i18n-provider";
 import { buttonClass } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
-
-// label.singular küçük harfle saklanır ("karakter"); başlıkta cümle başı olur.
-// Türkçe locale'i şart: "i" -> "İ".
-function capitalize(value: string) {
-  return value.charAt(0).toLocaleUpperCase("tr") + value.slice(1);
-}
 
 // Karakter/mekan kartı ekleme VE düzenleme modalı (mode ile). Görsel dosya
 // olarak yüklenir (/api/upload-image) ve dönen kalıcı Storage URL'i
@@ -28,7 +23,8 @@ export function EntityFormDialog({
   mode?: "create" | "edit";
   entity?: Entity;
 }) {
-  const label = ENTITY_LABELS[kind];
+  const { t } = useI18n();
+  const label = t.entityKinds[kind];
   const isEdit = mode === "edit";
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +60,7 @@ export function EntityFormDialog({
         });
         const json = await res.json();
         if (!res.ok) {
-          setError(json.error ?? "Görsel yüklenemedi.");
+          setError(json.error ?? t.upload.failed);
           return;
         }
         imageUrl = json.url;
@@ -100,10 +96,10 @@ export function EntityFormDialog({
         <button
           type="button"
           onClick={openDialog}
-          aria-label={`${entity?.name ?? label.singular} düzenle`}
+          aria-label={t.entity.editAria(entity?.name ?? label.editTitle)}
           className={buttonClass({ variant: "ghost", size: "sm" })}
         >
-          Düzenle
+          {t.common.edit}
         </button>
       ) : (
         <button type="button" onClick={openDialog} className={buttonClass()}>
@@ -114,10 +110,10 @@ export function EntityFormDialog({
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        heading={`${capitalize(label.singular)} ${isEdit ? "düzenle" : "ekle"}`}
+        heading={isEdit ? label.editTitle : label.addTitle}
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Field label="İsim" required>
+          <Field label={t.entity.name} required>
             <Input
               name="name"
               required
@@ -126,7 +122,7 @@ export function EntityFormDialog({
             />
           </Field>
 
-          <Field label="Betimleme">
+          <Field label={t.entity.description}>
             <Textarea
               name="description"
               rows={3}
@@ -135,7 +131,7 @@ export function EntityFormDialog({
             />
           </Field>
 
-          <Field label="Etiketler">
+          <Field label={t.entity.tags}>
             <Input
               name="tags"
               defaultValue={entity?.tags?.join(", ") ?? ""}
@@ -145,19 +141,20 @@ export function EntityFormDialog({
 
           {/* Görsel kaynağı seçimi */}
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-ink">Görsel</span>
+            <span className="text-sm font-medium text-ink">
+              {t.entity.image}
+            </span>
 
             {isEdit && entity?.image_url && (
               <div className="flex items-center gap-3 rounded-lg border border-line p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element -- mevcut görsel önizlemesi */}
                 <img
                   src={entity.image_url}
-                  alt="Mevcut görsel"
+                  alt={t.entity.currentImageAlt}
                   className="h-12 w-12 shrink-0 rounded object-cover"
                 />
                 <span className="text-xs text-ink-subtle">
-                  Mevcut görsel. Değiştirmek için yeni dosya seç; dokunmazsan
-                  korunur.
+                  {t.entity.currentImageHint}
                 </span>
               </div>
             )}
@@ -182,10 +179,10 @@ export function EntityFormDialog({
                   className: "shrink-0",
                 })}
               >
-                Görsel Seç
+                {t.entity.chooseImage}
               </button>
               <span className="min-w-0 flex-1 truncate text-xs text-ink-subtle">
-                {fileName ?? "Dosya seçilmedi"}
+                {fileName ?? t.entity.noFileChosen}
               </span>
             </div>
           </div>
@@ -202,10 +199,10 @@ export function EntityFormDialog({
               onClick={() => setOpen(false)}
               className={buttonClass({ variant: "secondary" })}
             >
-              İptal
+              {t.common.cancel}
             </button>
             <button type="submit" disabled={pending} className={buttonClass()}>
-              {pending ? "Kaydediliyor…" : isEdit ? "Kaydet" : "Ekle"}
+              {pending ? t.common.saving : isEdit ? t.common.save : t.common.add}
             </button>
           </ModalActions>
         </form>

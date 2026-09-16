@@ -2,6 +2,7 @@
 
 import { buttonClass } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "@/components/ui/icons";
+import { useI18n } from "@/components/i18n-provider";
 
 // Tema anahtarı — bilerek React state'i yok.
 // Hangi ikonun görüneceğine CSS karar veriyor: `dark:` variant'ı globals.css'te
@@ -9,6 +10,8 @@ import { MoonIcon, SunIcon } from "@/components/ui/icons";
 // hydration uyuşmazlığı ve efekt içinde setState (projede ESLint ile yasak)
 // gerekmiyor; ilk boyama layout'taki senkron betikle zaten doğru.
 export function ThemeToggle() {
+  const { t } = useI18n();
+
   function toggle() {
     const root = document.documentElement;
     const isDark = root.dataset.theme
@@ -28,8 +31,8 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Açık/koyu temayı değiştir"
-      title="Açık/koyu temayı değiştir"
+      aria-label={t.common.themeToggle}
+      title={t.common.themeToggle}
       className={buttonClass({ variant: "ghost", size: "icon" })}
     >
       <SunIcon className="hidden size-5 dark:block" />

@@ -6,15 +6,15 @@ import {
   findEmailByUsername,
   findUserIdByUsername,
 } from "@/lib/supabase/username-lookup";
-import { USERNAME_HINT, isValidUsername } from "@/lib/username";
+import { getDictionary } from "@/lib/i18n/server";
+import { USERNAME_MAX, USERNAME_MIN, isValidUsername } from "@/lib/username";
 
 export type AuthState = { error?: string; notice?: string } | undefined;
 
-// Kullanıcı adı yok / e-posta yok / şifre yanlış — hepsi aynı mesaj. Böylece
-// giriş formu, bir kullanıcı adının hangi e-postaya bağlı olduğunu ya da
-// şifrenin mi hesabın mı yanlış olduğunu belli etmez.
-const LOGIN_FAILED = "E-posta/kullanıcı adı veya şifre hatalı.";
-const SERVICE_UNAVAILABLE = "Şu an işlem yapılamıyor, lütfen tekrar dene.";
+// Kullanıcı adı yok / e-posta yok / şifre yanlış — hepsi aynı mesaj
+// (t.auth.loginFailed). Böylece giriş formu, bir kullanıcı adının hangi
+// e-postaya bağlı olduğunu ya da hatanın şifreden mi hesaptan mı olduğunu
+// belli etmez.
 
 // Login — e-posta VEYA kullanıcı adı + şifre. "@" içeren giriş e-posta,
 // içermeyen kullanıcı adı sayılır (kullanıcı adında "@" izinli değil).
@@ -23,18 +23,19 @@ export async function login(
   _prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const t = await getDictionary();
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   if (!identifier || !password) {
-    return { error: "E-posta/kullanıcı adı ve şifre zorunludur." };
+    return { error: t.auth.loginRequired };
   }
 
   let email = identifier;
   if (!identifier.includes("@")) {
     const lookup = await findEmailByUsername(identifier);
-    if (!lookup.ok) return { error: SERVICE_UNAVAILABLE };
-    if (!lookup.value) return { error: LOGIN_FAILED };
+    if (!lookup.ok) return { error: t.errors.serviceUnavailable };
+    if (!lookup.value) return { error: t.auth.loginFailed };
     email = lookup.value;
   }
 
@@ -42,7 +43,7 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: LOGIN_FAILED };
+    return { error: t.auth.loginFailed };
   }
 
   redirect("/dashboard");
@@ -54,25 +55,30 @@ export async function register(
   _prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const t = await getDictionary();
   const username = String(formData.get("username") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   if (!username || !email || !password) {
-    return { error: "Kullanıcı adı, e-posta ve şifre zorunludur." };
+    return { error: t.auth.registerRequired };
   }
   if (!isValidUsername(username)) {
-    return { error: `Kullanıcı adı geçersiz. ${USERNAME_HINT}` };
+    return {
+      error: t.auth.usernameInvalid(
+        t.auth.usernameHint(USERNAME_MIN, USERNAME_MAX),
+      ),
+    };
   }
   if (password.length < 6) {
-    return { error: "Şifre en az 6 karakter olmalıdır." };
+    return { error: t.auth.passwordTooShort };
   }
 
   // Asıl garanti veritabanındaki benzersiz index; bu ön kontrol yalnızca
   // anlaşılır bir mesaj vermek için.
   const existing = await findUserIdByUsername(username);
-  if (!existing.ok) return { error: SERVICE_UNAVAILABLE };
-  if (existing.value) return { error: "Bu kullanıcı adı alınmış." };
+  if (!existing.ok) return { error: t.errors.serviceUnavailable };
+  if (existing.value) return { error: t.auth.usernameTaken };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -86,10 +92,10 @@ export async function register(
     // handle_new_user trigger'ındaki insert'i düşürür; Supabase bunu yalnızca
     // bu genel mesajla bildirir.
     if (/database error saving new user/i.test(error.message)) {
-      return {
-        error: "Kayıt tamamlanamadı; kullanıcı adı az önce alınmış olabilir.",
-      };
+      return { error: t.auth.usernameRace };
     }
+    // Supabase Auth'un kendi mesajı (ör. geçersiz e-posta); yalnızca
+    // İngilizce döner, bilinmeyen hata türlerini çeviremiyoruz.
     return { error: error.message };
   }
 
@@ -99,10 +105,7 @@ export async function register(
     redirect("/dashboard");
   }
 
-  return {
-    notice:
-      "Hesabın oluşturuldu. E-postanı onayladıktan sonra giriş yapabilirsin.",
-  };
+  return { notice: t.auth.signupNotice };
 }
 
 // Logout — oturumu kapat ve landing'e dön.

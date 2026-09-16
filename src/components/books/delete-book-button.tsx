@@ -3,6 +3,7 @@
 import { deleteBook } from "@/app/actions/books";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { buttonClass } from "@/components/ui/button";
+import { useI18n } from "@/components/i18n-provider";
 
 // Silme — onay sorar ve CASCADE etkisini kullanıcıya hatırlatır (PRD Bölüm 2).
 export function DeleteBookButton({
@@ -12,22 +13,19 @@ export function DeleteBookButton({
   id: string;
   title: string;
 }) {
+  const { t } = useI18n();
   return (
     <form
       action={deleteBook}
       onSubmit={(e) => {
-        const ok = window.confirm(
-          `"${title}" kitabını silmek üzeresin.\n\n` +
-            "Bu kitaba bağlı TÜM karakterler, mekanlar ve alıntılar da " +
-            "kalıcı olarak silinecek. Bu işlem geri alınamaz.\n\nDevam edilsin mi?",
-        );
+        const ok = window.confirm(t.book.deleteConfirm(title));
         if (!ok) e.preventDefault();
       }}
     >
       <input type="hidden" name="id" value={id} />
       <SubmitButton
-        idleLabel="Sil"
-        pendingLabel="Siliniyor…"
+        idleLabel={t.common.delete}
+        pendingLabel={t.common.deleting}
         className={buttonClass({ variant: "danger", size: "sm" })}
       />
     </form>

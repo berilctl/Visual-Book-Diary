@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n/server";
 
 export type QuoteFormState = { ok?: boolean; error?: string } | undefined;
 
@@ -12,16 +13,17 @@ export async function createQuote(
   _prev: QuoteFormState,
   formData: FormData,
 ): Promise<QuoteFormState> {
+  const t = await getDictionary();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Oturum bulunamadı. Lütfen tekrar giriş yap." };
+  if (!user) return { error: t.errors.sessionMissing };
 
   const bookId = String(formData.get("book_id") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
-  if (!bookId) return { error: "Kitap kimliği eksik." };
-  if (!content) return { error: "Alıntı metni zorunludur." };
+  if (!bookId) return { error: t.errors.bookIdMissing };
+  if (!content) return { error: t.quotes.contentRequired };
 
   // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
   const { data: book } = await supabase
@@ -30,7 +32,7 @@ export async function createQuote(
     .eq("id", bookId)
     .maybeSingle();
   if (!book) {
-    return { error: "Kitap bulunamadı veya bu kitaba erişimin yok." };
+    return { error: t.errors.bookNotFound };
   }
 
   const pageOrChapter =
@@ -47,7 +49,7 @@ export async function createQuote(
       .eq("book_id", bookId)
       .maybeSingle();
     if (!character) {
-      return { error: "Seçilen karakter bu kitaba ait değil." };
+      return { error: t.quotes.characterNotInBook };
     }
   }
 

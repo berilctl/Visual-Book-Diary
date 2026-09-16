@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { updateBook } from "@/app/actions/books";
 import type { Book } from "@/lib/books";
+import { formatDate } from "@/lib/format";
+import { useI18n } from "@/components/i18n-provider";
 import { cardClass } from "@/components/ui/card";
 import { BookCover } from "./book-cover";
 import { BookFormDialog } from "./book-form-dialog";
@@ -22,15 +26,9 @@ const EMPTY_SUMMARY: BookSummary = {
   quotes: 0,
 };
 
-function formatDate(value: string | null) {
-  if (!value) return null;
-  // 'YYYY-MM-DD' — yerel TZ kaymasını önlemek için gün başı olarak işle.
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(date);
-}
-
-// Server Component. İçindeki düzenleme/silme aksiyonları client child'larda.
+// Client Component: seçili dile göre tarih biçimi ve çoğul sayılar
+// sözlükteki fonksiyonlarla üretiliyor (fonksiyonlar sunucudan prop olarak
+// aktarılamaz).
 export function BookCard({
   book,
   summary = EMPTY_SUMMARY,
@@ -38,13 +36,14 @@ export function BookCard({
   book: Book;
   summary?: BookSummary;
 }) {
-  const started = formatDate(book.start_date);
+  const { t, intlLocale } = useI18n();
+  const started = formatDate(book.start_date, intlLocale);
 
   const counts = [
-    { n: summary.characters, label: "karakter" },
-    { n: summary.locations, label: "mekan" },
-    { n: summary.quotes, label: "alıntı" },
-  ].filter((c) => c.n > 0);
+    summary.characters > 0 && t.entityKinds.characters.count(summary.characters),
+    summary.locations > 0 && t.entityKinds.locations.count(summary.locations),
+    summary.quotes > 0 && t.quotes.count(summary.quotes),
+  ].filter(Boolean);
 
   return (
     <article
@@ -69,18 +68,16 @@ export function BookCard({
           </div>
 
           <p className="mt-3 text-xs text-ink-subtle">
-            {counts.length > 0
-              ? counts.map((c) => `${c.n} ${c.label}`).join(" · ")
-              : "Henüz içerik yok"}
+            {counts.length > 0 ? counts.join(" · ") : t.book.noContent}
           </p>
         </Link>
 
         <div className="mt-4 flex items-center gap-2 border-t border-line pt-3">
           <BookFormDialog
             action={updateBook}
-            heading="Kitabı Düzenle"
-            submitLabel="Kaydet"
-            triggerLabel="Düzenle"
+            heading={t.book.editTitle}
+            submitLabel={t.common.save}
+            triggerLabel={t.common.edit}
             triggerVariant="secondary"
             bookId={book.id}
             initial={book}

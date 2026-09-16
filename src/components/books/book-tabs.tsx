@@ -5,13 +5,14 @@ import { EntityGrid } from "@/components/entities/entity-grid";
 import { QuoteList } from "@/components/quotes/quote-list";
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
+import { useI18n } from "@/components/i18n-provider";
 
 type TabKey = "characters" | "locations" | "quotes";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "characters", label: "Karakterler" },
-  { key: "locations", label: "Mekanlar" },
-  { key: "quotes", label: "Alıntılar" },
+const TABS: { key: TabKey }[] = [
+  { key: "characters" },
+  { key: "locations" },
+  { key: "quotes" },
 ];
 
 export function BookTabs({
@@ -25,7 +26,11 @@ export function BookTabs({
   locations: Entity[];
   quotes: Quote[];
 }) {
+  const { t } = useI18n();
   const [active, setActive] = useState<TabKey>("characters");
+
+  const tabLabel = (key: TabKey) =>
+    key === "quotes" ? t.quotes.tab : t.entityKinds[key].tab;
 
   // Roving tabindex: şeride tek Tab durağı düşer, sekmeler arası geçiş ok
   // tuşlarıyla yapılır (WAI-ARIA tabs deseni).
@@ -61,7 +66,7 @@ export function BookTabs({
           dikey kaydırma çubuğu gösteriyordu. */}
       <div
         role="tablist"
-        aria-label="Kitap içeriği"
+        aria-label={t.book.tabsLabel}
         onKeyDown={handleTabKeyDown}
         className="flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)]"
       >
@@ -86,7 +91,7 @@ export function BookTabs({
                   : "border-transparent text-ink-muted hover:text-ink"
               }`}
             >
-              {tab.label}
+              {tabLabel(tab.key)}
               <span
                 className={`rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
                   selected

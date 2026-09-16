@@ -3,18 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isBookStatus, type BookStatus } from "@/lib/books";
+import { getDictionary } from "@/lib/i18n/server";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 export type BookFormState = { ok?: boolean; error?: string } | undefined;
 
 // FormData'dan ortak alanları çıkar ve doğrula.
-function parseBookFields(formData: FormData):
+function parseBookFields(
+  formData: FormData,
+  t: Dictionary,
+):
   | { ok: true; title: string; author: string; start_date: string | null; status: BookStatus }
   | { ok: false; error: string } {
   const title = String(formData.get("title") ?? "").trim();
   const author = String(formData.get("author") ?? "").trim();
 
   if (!title || !author) {
-    return { ok: false, error: "Kitap adı ve yazar zorunludur." };
+    return { ok: false, error: t.book.titleAuthorRequired };
   }
 
   const start_date = String(formData.get("start_date") ?? "").trim() || null;
@@ -29,13 +34,14 @@ export async function createBook(
   _prev: BookFormState,
   formData: FormData,
 ): Promise<BookFormState> {
+  const t = await getDictionary();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Oturum bulunamadı. Lütfen tekrar giriş yap." };
+  if (!user) return { error: t.errors.sessionMissing };
 
-  const fields = parseBookFields(formData);
+  const fields = parseBookFields(formData, t);
   if (!fields.ok) return { error: fields.error };
 
   const { error } = await supabase.from("books").insert({
@@ -58,16 +64,17 @@ export async function updateBook(
   _prev: BookFormState,
   formData: FormData,
 ): Promise<BookFormState> {
+  const t = await getDictionary();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Oturum bulunamadı. Lütfen tekrar giriş yap." };
+  if (!user) return { error: t.errors.sessionMissing };
 
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) return { error: "Kitap kimliği eksik." };
+  if (!id) return { error: t.errors.bookIdMissing };
 
-  const fields = parseBookFields(formData);
+  const fields = parseBookFields(formData, t);
   if (!fields.ok) return { error: fields.error };
 
   const { error } = await supabase

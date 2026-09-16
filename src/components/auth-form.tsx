@@ -7,16 +7,18 @@ import { cardClass } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
 import {
-  USERNAME_HINT,
   USERNAME_MAX,
   USERNAME_MIN,
   USERNAME_PATTERN,
 } from "@/lib/username";
+import { useI18n } from "@/components/i18n-provider";
 
 type Mode = "login" | "register";
 
 export function AuthForm() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<Mode>("login");
+  const usernameHint = t.auth.usernameHint(USERNAME_MIN, USERNAME_MAX);
 
   // Her mod kendi action state'ini tutar.
   const [loginState, loginAction, loginPending] = useActionState<
@@ -39,8 +41,8 @@ export function AuthForm() {
         value={mode}
         onChange={setMode}
         options={[
-          { value: "login", label: "Giriş Yap" },
-          { value: "register", label: "Kayıt Ol" },
+          { value: "login", label: t.auth.login },
+          { value: "register", label: t.auth.register },
         ]}
       />
 
@@ -54,7 +56,7 @@ export function AuthForm() {
           // Tek alan: "@" içeriyorsa e-posta, içermiyorsa kullanıcı adı.
           // type="text" şart — type="email" kullanıcı adını tarayıcıda
           // gönderilmeden reddediyordu.
-          <Field label="E-posta veya kullanıcı adı" required>
+          <Field label={t.auth.identifier} required>
             <Input
               name="identifier"
               type="text"
@@ -62,12 +64,12 @@ export function AuthForm() {
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
-              placeholder="okur123"
+              placeholder={t.auth.usernamePlaceholder}
             />
           </Field>
         ) : (
           <>
-            <Field label="Kullanıcı adı" required hint={USERNAME_HINT}>
+            <Field label={t.auth.username} required hint={usernameHint}>
               <Input
                 name="username"
                 type="text"
@@ -75,25 +77,25 @@ export function AuthForm() {
                 minLength={USERNAME_MIN}
                 maxLength={USERNAME_MAX}
                 pattern={USERNAME_PATTERN}
-                title={USERNAME_HINT}
+                title={usernameHint}
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
-                placeholder="okur123"
+                placeholder={t.auth.usernamePlaceholder}
               />
             </Field>
-            <Field label="E-posta" required>
+            <Field label={t.auth.email} required>
               <Input
                 name="email"
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="ornek@eposta.com"
+                placeholder={t.auth.emailPlaceholder}
               />
             </Field>
           </>
         )}
-        <Field label="Şifre" required>
+        <Field label={t.auth.password} required>
           <Input
             name="password"
             type="password"
@@ -120,7 +122,11 @@ export function AuthForm() {
           disabled={pending}
           className={buttonClass({ className: "mt-1 w-full" })}
         >
-          {pending ? "Lütfen bekleyin…" : isLogin ? "Giriş Yap" : "Kayıt Ol"}
+          {pending
+            ? t.auth.pleaseWait
+            : isLogin
+              ? t.auth.login
+              : t.auth.register}
         </button>
       </form>
     </div>

@@ -1,8 +1,11 @@
+"use client";
+
 import type { Entity } from "@/lib/entities";
 import type { Quote } from "@/lib/quotes";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuoteIcon } from "@/components/ui/icons";
 import { cardClass } from "@/components/ui/card";
+import { useI18n } from "@/components/i18n-provider";
 import { QuoteFormDialog } from "./quote-form-dialog";
 import { DeleteQuoteButton } from "./delete-quote-button";
 
@@ -16,6 +19,7 @@ export function QuoteList({
   quotes: Quote[];
   characters: Entity[];
 }) {
+  const { t } = useI18n();
   const nameById = new Map(characters.map((c) => [c.id, c.name]));
   const options = characters.map((c) => ({ id: c.id, name: c.name }));
 
@@ -23,8 +27,8 @@ export function QuoteList({
     return (
       <EmptyState
         icon={<QuoteIcon className="size-7" />}
-        title="Henüz alıntı yok"
-        hint="Sevdiğin bir cümleyi ekle — sayfa/bölüm ve istersen bir karakterle birlikte."
+        title={t.quotes.emptyTitle}
+        hint={t.quotes.emptyHint}
         action={<QuoteFormDialog bookId={bookId} characters={options} />}
       />
     );
@@ -33,7 +37,7 @@ export function QuoteList({
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-4">
-        <p className="text-sm text-ink-muted">{quotes.length} alıntı</p>
+        <p className="text-sm text-ink-muted">{t.quotes.count(quotes.length)}</p>
         <QuoteFormDialog bookId={bookId} characters={options} />
       </div>
 

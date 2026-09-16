@@ -4,6 +4,7 @@ import { deleteEntity } from "@/app/actions/entities";
 import type { EntityKind } from "@/lib/entities";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { buttonClass } from "@/components/ui/button";
+import { useI18n } from "@/components/i18n-provider";
 
 export function DeleteEntityButton({
   kind,
@@ -16,11 +17,12 @@ export function DeleteEntityButton({
   id: string;
   name: string;
 }) {
+  const { t } = useI18n();
   return (
     <form
       action={deleteEntity}
       onSubmit={(e) => {
-        if (!window.confirm(`"${name}" silinsin mi? Bu işlem geri alınamaz.`)) {
+        if (!window.confirm(t.entity.deleteConfirm(name))) {
           e.preventDefault();
         }
       }}
@@ -29,9 +31,9 @@ export function DeleteEntityButton({
       <input type="hidden" name="book_id" value={bookId} />
       <input type="hidden" name="id" value={id} />
       <SubmitButton
-        idleLabel="Sil"
-        pendingLabel="Siliniyor…"
-        ariaLabel={`${name} sil`}
+        idleLabel={t.common.delete}
+        pendingLabel={t.common.deleting}
+        ariaLabel={t.entity.deleteAria(name)}
         className={buttonClass({ variant: "dangerQuiet", size: "sm" })}
       />
     </form>

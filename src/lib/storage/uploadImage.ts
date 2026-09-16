@@ -1,14 +1,12 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
-// Hem dosya yükleme (Adım 6) hem AI üretimi (Adım 8) bu tek fonksiyonu
-// kullanır — iki giriş noktası, tek hedef (PRD Bölüm 6.1).
+// Tüm görsel yüklemeleri bu tek fonksiyondan geçer (PRD Bölüm 6.1).
 
 const BUCKET = "book-images";
 
-// İçerik tipinden dosya uzantısı. PRD yol konvansiyonu .png'dir; AI üretimi
-// her zaman png döner. Dosya yükleme jpeg/webp olabileceğinden gerçek tipi
-// koruyup doğru uzantıyı seçiyoruz.
+// İçerik tipinden dosya uzantısı. Yüklenen dosya png/jpeg/webp olabileceğinden
+// gerçek tipi koruyup doğru uzantıyı seçiyoruz.
 const EXT_BY_TYPE: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",

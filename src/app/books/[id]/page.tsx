@@ -7,14 +7,9 @@ import type { Quote } from "@/lib/quotes";
 import { AppHeader } from "@/components/app-header";
 import { BookTabs } from "@/components/books/book-tabs";
 import { StatusBadge } from "@/components/books/status-badge";
-
-function formatDate(value: string | null) {
-  if (!value) return null;
-  // 'YYYY-MM-DD' — yerel TZ kaymasını önlemek için gün başı olarak işle.
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(date);
-}
+import { formatDate } from "@/lib/format";
+import { INTL_LOCALE } from "@/lib/i18n/config";
+import { getDictionary, getLocale } from "@/lib/i18n/server";
 
 // /books/[id] — Kitap detay sayfası + 3 sekme (PRD Bölüm 7).
 // Next 16: params bir Promise'tir, await edilmelidir.
@@ -62,7 +57,8 @@ export default async function BookDetailPage({
         .order("created_at", { ascending: false }),
     ]);
 
-  const started = formatDate(book.start_date);
+  const [locale, t] = await Promise.all([getLocale(), getDictionary()]);
+  const started = formatDate(book.start_date, INTL_LOCALE[locale]);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -76,7 +72,7 @@ export default async function BookDetailPage({
             href="/dashboard"
             className="inline-flex min-h-8 items-center text-sm text-ink-muted transition hover:text-accent"
           >
-            ← Kitaplığa dön
+            {t.book.backToLibrary}
           </Link>
 
           <h1 className="mt-4 text-4xl leading-tight text-ink">{book.title}</h1>
@@ -86,7 +82,7 @@ export default async function BookDetailPage({
             <StatusBadge status={book.status} />
             {started && (
               <span className="text-sm text-ink-subtle">
-                Başlangıç: {started}
+                {t.book.startedOn(started)}
               </span>
             )}
           </div>

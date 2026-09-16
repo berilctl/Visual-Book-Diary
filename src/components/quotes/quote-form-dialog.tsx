@@ -5,6 +5,7 @@ import { createQuote } from "@/app/actions/quotes";
 import { buttonClass } from "@/components/ui/button";
 import { Field, Select, Textarea, Input } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
+import { useI18n } from "@/components/i18n-provider";
 
 // Alıntı ekleme modalı: content (zorunlu), page_or_chapter (opsiyonel),
 // ve opsiyonel karakter bağlama (bu kitabın karakterleri arasından).
@@ -15,6 +16,7 @@ export function QuoteFormDialog({
   bookId: string;
   characters: { id: string; name: string }[];
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -41,39 +43,39 @@ export function QuoteFormDialog({
   return (
     <>
       <button type="button" onClick={openDialog} className={buttonClass()}>
-        + Alıntı Ekle
+        {t.quotes.addCta}
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} heading="Alıntı ekle">
+      <Modal open={open} onClose={() => setOpen(false)} heading={t.quotes.addTitle}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input type="hidden" name="book_id" value={bookId} />
 
-          <Field label="Alıntı" required>
+          <Field label={t.quotes.content} required>
             <Textarea
               name="content"
               required
               rows={4}
-              placeholder="Alıntı metnini buraya yaz…"
+              placeholder={t.quotes.contentPlaceholder}
             />
           </Field>
 
-          <Field label="Sayfa / Bölüm">
+          <Field label={t.quotes.pageOrChapter}>
             <Input
               name="page_or_chapter"
-              placeholder="örn. s. 142 ya da Bölüm 7"
+              placeholder={t.quotes.pageOrChapterPlaceholder}
             />
           </Field>
 
           <Field
-            label="Karakter (opsiyonel)"
+            label={t.quotes.character}
             hint={
               characters.length === 0
-                ? "Bu kitapta henüz karakter yok."
+                ? t.quotes.noCharactersHint
                 : undefined
             }
           >
             <Select name="character_id" defaultValue="">
-              <option value="">— karaktere bağlama</option>
+              <option value="">{t.quotes.noCharacterOption}</option>
               {characters.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -94,10 +96,10 @@ export function QuoteFormDialog({
               onClick={() => setOpen(false)}
               className={buttonClass({ variant: "secondary" })}
             >
-              İptal
+              {t.common.cancel}
             </button>
             <button type="submit" disabled={pending} className={buttonClass()}>
-              {pending ? "Kaydediliyor…" : "Ekle"}
+              {pending ? t.common.saving : t.common.add}
             </button>
           </ModalActions>
         </form>

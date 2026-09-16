@@ -1,4 +1,7 @@
-import { BOOK_STATUS_LABELS, type BookStatus } from "@/lib/books";
+"use client";
+
+import type { BookStatus } from "@/lib/books";
+import { useI18n } from "@/components/i18n-provider";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 
 // Durumlar artık renk taşıyor: okunan kitap markanın aksanıyla öne çıkar,
@@ -12,5 +15,6 @@ const STATUS_TONES: Record<BookStatus, BadgeTone> = {
 };
 
 export function StatusBadge({ status }: { status: BookStatus }) {
-  return <Badge tone={STATUS_TONES[status]}>{BOOK_STATUS_LABELS[status]}</Badge>;
+  const { t } = useI18n();
+  return <Badge tone={STATUS_TONES[status]}>{t.bookStatus[status]}</Badge>;
 }

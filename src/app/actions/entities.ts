@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isEntityKind } from "@/lib/entities";
+import { getDictionary } from "@/lib/i18n/server";
 
 export type EntityFormState = { ok?: boolean; error?: string } | undefined;
 
@@ -25,19 +26,20 @@ export async function createEntity(
   _prev: EntityFormState,
   formData: FormData,
 ): Promise<EntityFormState> {
+  const t = await getDictionary();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Oturum bulunamadı. Lütfen tekrar giriş yap." };
+  if (!user) return { error: t.errors.sessionMissing };
 
   const kind = formData.get("kind");
-  if (!isEntityKind(kind)) return { error: "Geçersiz tür." };
+  if (!isEntityKind(kind)) return { error: t.errors.invalidKind };
 
   const bookId = String(formData.get("book_id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
-  if (!bookId) return { error: "Kitap kimliği eksik." };
-  if (!name) return { error: "İsim zorunludur." };
+  if (!bookId) return { error: t.errors.bookIdMissing };
+  if (!name) return { error: t.entity.nameRequired };
 
   // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
   const { data: book } = await supabase
@@ -46,7 +48,7 @@ export async function createEntity(
     .eq("id", bookId)
     .maybeSingle();
   if (!book) {
-    return { error: "Kitap bulunamadı veya bu kitaba erişimin yok." };
+    return { error: t.errors.bookNotFound };
   }
 
   const description = String(formData.get("description") ?? "").trim() || null;
@@ -58,7 +60,7 @@ export async function createEntity(
   if (imageUrl) {
     const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "")}/storage/v1/object/public/book-images/`;
     if (!imageUrl.startsWith(storagePrefix)) {
-      return { error: "Geçersiz görsel kaynağı." };
+      return { error: t.errors.invalidImageSource };
     }
   }
 
@@ -83,21 +85,22 @@ export async function updateEntity(
   _prev: EntityFormState,
   formData: FormData,
 ): Promise<EntityFormState> {
+  const t = await getDictionary();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Oturum bulunamadı. Lütfen tekrar giriş yap." };
+  if (!user) return { error: t.errors.sessionMissing };
 
   const kind = formData.get("kind");
-  if (!isEntityKind(kind)) return { error: "Geçersiz tür." };
+  if (!isEntityKind(kind)) return { error: t.errors.invalidKind };
 
   const id = String(formData.get("id") ?? "").trim();
   const bookId = String(formData.get("book_id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
-  if (!id) return { error: "Kart kimliği eksik." };
-  if (!bookId) return { error: "Kitap kimliği eksik." };
-  if (!name) return { error: "İsim zorunludur." };
+  if (!id) return { error: t.errors.cardIdMissing };
+  if (!bookId) return { error: t.errors.bookIdMissing };
+  if (!name) return { error: t.entity.nameRequired };
 
   // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
   const { data: book } = await supabase
@@ -106,7 +109,7 @@ export async function updateEntity(
     .eq("id", bookId)
     .maybeSingle();
   if (!book) {
-    return { error: "Kitap bulunamadı veya bu kitaba erişimin yok." };
+    return { error: t.errors.bookNotFound };
   }
 
   const description = String(formData.get("description") ?? "").trim() || null;
@@ -120,7 +123,7 @@ export async function updateEntity(
   if (imageUrl) {
     const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "")}/storage/v1/object/public/book-images/`;
     if (!imageUrl.startsWith(storagePrefix)) {
-      return { error: "Geçersiz görsel kaynağı." };
+      return { error: t.errors.invalidImageSource };
     }
     updates.image_url = imageUrl;
   }

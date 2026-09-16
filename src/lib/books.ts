@@ -9,13 +9,7 @@ export const BOOK_STATUSES = [
 
 export type BookStatus = (typeof BOOK_STATUSES)[number];
 
-export const BOOK_STATUS_LABELS: Record<BookStatus, string> = {
-  reading: "Okunuyor",
-  completed: "Tamamlandı",
-  want_to_read: "Okunacak",
-  paused: "Duraklatıldı",
-  dnf: "Yarım bırakıldı",
-};
+// Durum etiketleri sözlükte: t.bookStatus[status].
 
 export type Book = {
   id: string;

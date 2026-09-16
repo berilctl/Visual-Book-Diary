@@ -1,4 +1,7 @@
-import { ENTITY_LABELS, type Entity, type EntityKind } from "@/lib/entities";
+"use client";
+
+import type { Entity, EntityKind } from "@/lib/entities";
+import { useI18n } from "@/components/i18n-provider";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CharacterIcon, LocationIcon } from "@/components/ui/icons";
 import { EntityCard } from "./entity-card";
@@ -19,15 +22,16 @@ export function EntityGrid({
   bookId: string;
   items: Entity[];
 }) {
-  const label = ENTITY_LABELS[kind];
+  const { t } = useI18n();
+  const label = t.entityKinds[kind];
 
   if (items.length === 0) {
     const Icon = EMPTY_ICONS[kind];
     return (
       <EmptyState
         icon={<Icon className="size-7" />}
-        title={`Henüz ${label.singular} yok`}
-        hint={`İlk ${label.singular} kartını ekle — betimlemesini yaz, istersen bir görsel yükle.`}
+        title={label.emptyTitle}
+        hint={label.emptyHint}
         action={<EntityFormDialog kind={kind} bookId={bookId} />}
       />
     );
@@ -37,7 +41,7 @@ export function EntityGrid({
     <div>
       <div className="mb-5 flex items-center justify-between gap-4">
         <p className="text-sm text-ink-muted">
-          {items.length} {label.singular}
+          {label.count(items.length)}
         </p>
         <EntityFormDialog kind={kind} bookId={bookId} />
       </div>

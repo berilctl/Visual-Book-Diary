@@ -1,4 +1,5 @@
 import { BrandMark } from "@/components/brand";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { LogoutButton } from "@/components/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -9,6 +10,7 @@ export function AppHeader() {
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <BrandMark iconClassName="size-9" textClassName="text-base" />
         <div className="flex items-center gap-2">
+          <LocaleToggle />
           <ThemeToggle />
           <LogoutButton />
         </div>

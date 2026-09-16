@@ -3,31 +3,7 @@
 export const ENTITY_KINDS = ["characters", "locations"] as const;
 export type EntityKind = (typeof ENTITY_KINDS)[number];
 
-export const ENTITY_LABELS: Record<
-  EntityKind,
-  {
-    singular: string;
-    addCta: string;
-    namePlaceholder: string;
-    descriptionPlaceholder: string;
-    tagsPlaceholder: string;
-  }
-> = {
-  characters: {
-    singular: "karakter",
-    addCta: "+ Karakter Ekle",
-    namePlaceholder: "örn. Mina Harker",
-    descriptionPlaceholder: "Görünüş, kişilik, önemli özellikler…",
-    tagsPlaceholder: "virgülle ayır: Vampir, Antagonist",
-  },
-  locations: {
-    singular: "mekan",
-    addCta: "+ Mekan Ekle",
-    namePlaceholder: "örn. Whitby Manastırı",
-    descriptionPlaceholder: "Görünüş, atmosfer, hikâyedeki önemi…",
-    tagsPlaceholder: "virgülle ayır: Şato, Köy, Gizemli",
-  },
-};
+// Türe özgü arayüz metinleri sözlükte: t.entityKinds[kind].
 
 export type Entity = {
   id: string;

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import type { BookFormState } from "@/app/actions/books";
-import { BOOK_STATUSES, BOOK_STATUS_LABELS } from "@/lib/books";
+import { BOOK_STATUSES } from "@/lib/books";
+import { useI18n } from "@/components/i18n-provider";
 import { buttonClass, type ButtonVariant } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
@@ -39,6 +40,7 @@ export function BookFormDialog({
   bookId,
   initial,
 }: Props) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -79,25 +81,25 @@ export function BookFormDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {bookId && <input type="hidden" name="id" value={bookId} />}
 
-          <Field label="Kitap adı" required>
+          <Field label={t.book.title} required>
             <Input
               name="title"
               required
               defaultValue={initial?.title ?? ""}
-              placeholder="örn. Dracula"
+              placeholder={t.book.titlePlaceholder}
             />
           </Field>
 
-          <Field label="Yazar" required>
+          <Field label={t.book.author} required>
             <Input
               name="author"
               required
               defaultValue={initial?.author ?? ""}
-              placeholder="örn. Bram Stoker"
+              placeholder={t.book.authorPlaceholder}
             />
           </Field>
 
-          <Field label="Başlangıç tarihi">
+          <Field label={t.book.startDate}>
             <Input
               type="date"
               name="start_date"
@@ -105,11 +107,11 @@ export function BookFormDialog({
             />
           </Field>
 
-          <Field label="Durum">
+          <Field label={t.book.status}>
             <Select name="status" defaultValue={initial?.status ?? "reading"}>
               {BOOK_STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {BOOK_STATUS_LABELS[s]}
+                  {t.bookStatus[s]}
                 </option>
               ))}
             </Select>
@@ -127,14 +129,14 @@ export function BookFormDialog({
               onClick={() => setOpen(false)}
               className={buttonClass({ variant: "secondary" })}
             >
-              İptal
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               disabled={pending}
               className={buttonClass()}
             >
-              {pending ? "Kaydediliyor…" : submitLabel}
+              {pending ? t.common.saving : submitLabel}
             </button>
           </ModalActions>
         </form>
