@@ -45,8 +45,7 @@ export default function Home() {
           </h1>
           <p className="mt-5 text-base leading-relaxed text-ink-muted">
             Karakterleri, mekanları ve altını çizdiğin cümleleri tek bir
-            günlükte topla. Görselleri kendin yükle ya da betimlemeden AI ile
-            ürettir.
+            günlükte topla; her birini kendi seçtiğin görsellerle canlandır.
           </p>
         </section>
 

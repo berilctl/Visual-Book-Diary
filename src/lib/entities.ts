@@ -11,7 +11,6 @@ export const ENTITY_LABELS: Record<
     namePlaceholder: string;
     descriptionPlaceholder: string;
     tagsPlaceholder: string;
-    promptPlaceholder: string;
   }
 > = {
   characters: {
@@ -20,8 +19,6 @@ export const ENTITY_LABELS: Record<
     namePlaceholder: "örn. Mina Harker",
     descriptionPlaceholder: "Görünüş, kişilik, önemli özellikler…",
     tagsPlaceholder: "virgülle ayır: Vampir, Antagonist",
-    promptPlaceholder:
-      "örn. solgun tenli, kızıl gözlü bir vampir, gotik portre",
   },
   locations: {
     singular: "mekan",
@@ -29,8 +26,6 @@ export const ENTITY_LABELS: Record<
     namePlaceholder: "örn. Whitby Manastırı",
     descriptionPlaceholder: "Görünüş, atmosfer, hikâyedeki önemi…",
     tagsPlaceholder: "virgülle ayır: Şato, Köy, Gizemli",
-    promptPlaceholder:
-      "örn. sisli bir uçurumda gotik manastır harabesi, ay ışığı",
   },
 };
 

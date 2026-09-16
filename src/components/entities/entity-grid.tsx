@@ -27,7 +27,7 @@ export function EntityGrid({
       <EmptyState
         icon={<Icon className="size-7" />}
         title={`Henüz ${label.singular} yok`}
-        hint={`İlk ${label.singular} kartını ekle — görsel yükle ya da betimlemeden AI ile üret.`}
+        hint={`İlk ${label.singular} kartını ekle — betimlemesini yaz, istersen bir görsel yükle.`}
         action={<EntityFormDialog kind={kind} bookId={bookId} />}
       />
     );
