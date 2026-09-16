@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import type { Entity, EntityKind } from "@/lib/entities";
+import { useI18n } from "@/components/i18n-provider";
+import { ActionMenu } from "@/components/ui/action-menu";
+import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { cardClass } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeleteEntityButton } from "./delete-entity-button";
@@ -15,12 +21,18 @@ export function EntityCard({
   bookId: string;
   entity: Entity;
 }) {
+  const { t } = useI18n();
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   return (
+    // overflow-hidden kartta değil görselde: ⋯ menüsü kısa kartlarda kartın
+    // dışına taşar, kırpılmamalı.
     <div
-      className={`group mb-4 break-inside-avoid overflow-hidden transition hover:shadow-lift ${cardClass}`}
+      className={`group mb-4 break-inside-avoid transition hover:shadow-lift ${cardClass}`}
     >
       {entity.image_url && (
-        <div className="overflow-hidden">
+        <div className="overflow-hidden rounded-t-[calc(1rem-1px)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- masonry doğal oran gerektirir */}
           <img
             src={entity.image_url}
@@ -35,18 +47,24 @@ export function EntityCard({
           <h3 className="font-serif text-lg leading-snug text-ink">
             {entity.name}
           </h3>
-          <div className="flex shrink-0 items-center gap-0.5">
-            <EntityFormDialog
-              kind={kind}
-              bookId={bookId}
-              mode="edit"
-              entity={entity}
-            />
-            <DeleteEntityButton
-              kind={kind}
-              bookId={bookId}
-              id={entity.id}
-              name={entity.name}
+          <div className="-mr-1.5 -mt-0.5 shrink-0">
+            <ActionMenu
+              label={t.common.moreActions(entity.name)}
+              items={[
+                {
+                  key: "edit",
+                  label: t.common.edit,
+                  icon: <PencilIcon className="size-4" />,
+                  onSelect: () => setEditOpen(true),
+                },
+                {
+                  key: "delete",
+                  label: t.common.delete,
+                  icon: <TrashIcon className="size-4" />,
+                  tone: "danger",
+                  onSelect: () => setDeleteOpen(true),
+                },
+              ]}
             />
           </div>
         </div>
@@ -67,6 +85,23 @@ export function EntityCard({
           </div>
         )}
       </div>
+
+      <EntityFormDialog
+        kind={kind}
+        bookId={bookId}
+        mode="edit"
+        entity={entity}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+      <DeleteEntityButton
+        kind={kind}
+        bookId={bookId}
+        id={entity.id}
+        name={entity.name}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+      />
     </div>
   );
 }

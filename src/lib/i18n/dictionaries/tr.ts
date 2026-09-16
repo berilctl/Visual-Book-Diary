@@ -20,6 +20,7 @@ export const tr = {
     saving: "Kaydediliyor…",
     deleting: "Siliniyor…",
     irreversible: "Bu işlem geri alınamaz.",
+    moreActions: (name: string) => `${name} için işlemler`,
     logout: "Çıkış Yap",
     themeToggle: "Açık/koyu temayı değiştir",
   },

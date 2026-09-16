@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { Book } from "@/lib/books";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/components/i18n-provider";
+import { ActionMenu } from "@/components/ui/action-menu";
 import { cardClass } from "@/components/ui/card";
+import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { BookCover } from "./book-cover";
 import { BookFormDialog } from "./book-form-dialog";
 import { BookProgress } from "./book-progress";
@@ -33,6 +36,10 @@ export function BookCard({
 }) {
   const { t, intlLocale } = useI18n();
   const started = formatDate(book.start_date, intlLocale);
+  // Pencereler menünün içinde değil burada: menü seçimden sonra kapanır,
+  // içindeki pencere de onunla birlikte kaybolurdu.
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const counts = [
     summary.characters > 0 && t.entityKinds.characters.count(summary.characters),
@@ -41,12 +48,18 @@ export function BookCard({
   ].filter(Boolean);
 
   return (
+    // overflow-hidden kartta değil kapakta: ⋯ menüsü kartın dışına taşabilsin
+    // (kırpılmasın), kapağın köşeleri yine kartın yuvarlak kenarına uysun.
     <article
-      className={`group flex flex-col overflow-hidden transition hover:shadow-lift ${cardClass}`}
+      className={`group relative flex flex-col transition hover:shadow-lift ${cardClass}`}
     >
       {/* Kapak linki klavye sırasından çıkarıldı: aynı hedefe giden başlık
           linki zaten var, kapak dekoratif (alt=""). */}
-      <Link href={`/books/${book.id}`} tabIndex={-1} className="block">
+      <Link
+        href={`/books/${book.id}`}
+        tabIndex={-1}
+        className="block overflow-hidden rounded-t-[calc(1rem-1px)]"
+      >
         <BookCover
           seed={book.id}
           title={book.title}
@@ -83,18 +96,45 @@ export function BookCard({
           <BookProgress book={book} variant="card" />
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-          <BookFormDialog
-            heading={t.book.editTitle}
-            submitLabel={t.common.save}
-            triggerLabel={t.common.edit}
-            triggerVariant="secondary"
-            bookId={book.id}
-            initial={book}
-          />
-          <DeleteBookButton id={book.id} title={book.title} />
-        </div>
       </div>
+
+      {/* Linkin dışında (link içinde buton geçersiz HTML), kapağın köşesinde. */}
+      <div className="absolute right-2 top-2">
+        <ActionMenu
+          label={t.common.moreActions(book.title)}
+          variant="floating"
+          items={[
+            {
+              key: "edit",
+              label: t.common.edit,
+              icon: <PencilIcon className="size-4" />,
+              onSelect: () => setEditOpen(true),
+            },
+            {
+              key: "delete",
+              label: t.common.delete,
+              icon: <TrashIcon className="size-4" />,
+              tone: "danger",
+              onSelect: () => setDeleteOpen(true),
+            },
+          ]}
+        />
+      </div>
+
+      <BookFormDialog
+        heading={t.book.editTitle}
+        submitLabel={t.common.save}
+        bookId={book.id}
+        initial={book}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+      <DeleteBookButton
+        id={book.id}
+        title={book.title}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+      />
     </article>
   );
 }

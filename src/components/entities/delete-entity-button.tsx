@@ -11,11 +11,16 @@ export function DeleteEntityButton({
   bookId,
   id,
   name,
+  open,
+  onOpenChange,
 }: {
   kind: EntityKind;
   bookId: string;
   id: string;
   name: string;
+  // Verilirse kendi butonu çizilmez, pencere dışarıdan (⋯ menüsü) açılır.
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const { t } = useI18n();
   const label = t.entityKinds[kind];
@@ -28,6 +33,8 @@ export function DeleteEntityButton({
       title={label.deleteTitle}
       body={label.deleteBody(name)}
       confirmLabel={t.common.delete}
+      open={open}
+      onOpenChange={onOpenChange}
       onConfirm={async () => {
         const formData = new FormData();
         formData.set("kind", kind);

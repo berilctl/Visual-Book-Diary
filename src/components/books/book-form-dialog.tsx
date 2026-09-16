@@ -14,13 +14,17 @@ import { useI18n } from "@/components/i18n-provider";
 import { buttonClass, type ButtonVariant } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
+import { useControllableOpen } from "@/components/ui/use-controllable-open";
 import { BookCover } from "./book-cover";
 
 type Props = {
   heading: string;
   submitLabel: string;
-  triggerLabel: string;
+  // Kendi tetikleyici butonu için; open verilirse (dışarıdan kontrol) çizilmez.
+  triggerLabel?: string;
   triggerVariant?: ButtonVariant;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   // Verilirse düzenleme modu:
   bookId?: string;
   initial?: {
@@ -46,9 +50,11 @@ export function BookFormDialog({
   triggerVariant = "primary",
   bookId,
   initial,
+  open: openProp,
+  onOpenChange,
 }: Props) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen, controlled] = useControllableOpen(openProp, onOpenChange);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -88,8 +94,12 @@ export function BookFormDialog({
     setOpen(true);
   }
 
+  // Sıfırlama kapanışta: dışarıdan kontrolde (⋯ menüsü) openDialog hiç
+  // çalışmaz, bir sonraki açılış yine temiz başlasın.
   function closeDialog() {
     setOpen(false);
+    setError(null);
+    setCreatedId(null);
     resetCover();
   }
 
@@ -212,16 +222,18 @@ export function BookFormDialog({
 
   return (
     <>
-      <button
-        type="button"
-        className={buttonClass({
-          variant: triggerVariant,
-          size: triggerVariant === "primary" ? "md" : "sm",
-        })}
-        onClick={openDialog}
-      >
-        {triggerLabel}
-      </button>
+      {!controlled && (
+        <button
+          type="button"
+          className={buttonClass({
+            variant: triggerVariant,
+            size: triggerVariant === "primary" ? "md" : "sm",
+          })}
+          onClick={openDialog}
+        >
+          {triggerLabel}
+        </button>
+      )}
 
       <Modal open={open} onClose={closeDialog} heading={heading}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

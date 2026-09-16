@@ -23,6 +23,7 @@ export const en: Dictionary = {
     saving: "Saving…",
     deleting: "Deleting…",
     irreversible: "This can't be undone.",
+    moreActions: (name) => `Actions for ${name}`,
     logout: "Sign Out",
     themeToggle: "Toggle light/dark theme",
   },

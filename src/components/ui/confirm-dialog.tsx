@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useTransition, type ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { buttonClass } from "@/components/ui/button";
 import { Modal, ModalActions } from "@/components/ui/modal";
+import { useControllableOpen } from "@/components/ui/use-controllable-open";
 
 // Geri alınamaz işlemler için onay: tetikleyici buton + temaya uygun pencere.
 // Tarayıcının window.confirm() penceresinin yerine (koyu temaya uymuyor,
@@ -12,6 +13,8 @@ import { Modal, ModalActions } from "@/components/ui/modal";
 // - role="alertdialog" ve açıklama aria-describedby ile bağlı.
 // - Açılışta odak "İptal"de (DOM'da ilk buton): yanlışlıkla Enter silmez.
 // - İşlem sürerken pencere kapatılamaz ve butonlar kilitlenir.
+// - open/onOpenChange verilirse dışarıdan kontrol edilir ve tetikleyici çizilmez
+//   (ör. ⋯ menüsünden açılır).
 export function ConfirmDialog({
   triggerLabel,
   triggerAriaLabel,
@@ -20,17 +23,21 @@ export function ConfirmDialog({
   body,
   confirmLabel,
   onConfirm,
+  open: openProp,
+  onOpenChange,
 }: {
-  triggerLabel: string;
+  triggerLabel?: string;
   triggerAriaLabel?: string;
-  triggerClassName: string;
+  triggerClassName?: string;
   title: string;
   body: ReactNode;
   confirmLabel: string;
   onConfirm: () => Promise<void>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen, controlled] = useControllableOpen(openProp, onOpenChange);
   const [pending, startTransition] = useTransition();
 
   const close = () => {
@@ -46,15 +53,17 @@ export function ConfirmDialog({
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={triggerAriaLabel}
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-        className={triggerClassName}
-      >
-        {triggerLabel}
-      </button>
+      {!controlled && (
+        <button
+          type="button"
+          aria-label={triggerAriaLabel}
+          aria-haspopup="dialog"
+          onClick={() => setOpen(true)}
+          className={triggerClassName}
+        >
+          {triggerLabel}
+        </button>
+      )}
 
       <Modal
         open={open}

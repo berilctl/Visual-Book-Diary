@@ -7,26 +7,33 @@ import { useI18n } from "@/components/i18n-provider";
 import { buttonClass } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
+import { useControllableOpen } from "@/components/ui/use-controllable-open";
 
 // Karakter/mekan kartı ekleme VE düzenleme modalı (mode ile). Görsel dosya
 // olarak yüklenir (/api/upload-image) ve dönen kalıcı Storage URL'i
 // create/updateEntity'ye geçer. Düzenlemede yeni dosya seçilmezse mevcut
 // görsel korunur.
+// open/onOpenChange verilirse dışarıdan kontrol edilir (⋯ menüsü) ve kendi
+// tetikleyici butonu çizilmez.
 export function EntityFormDialog({
   kind,
   bookId,
   mode = "create",
   entity,
+  open: openProp,
+  onOpenChange,
 }: {
   kind: EntityKind;
   bookId: string;
   mode?: "create" | "edit";
   entity?: Entity;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const { t } = useI18n();
   const label = t.entityKinds[kind];
   const isEdit = mode === "edit";
-  const [open, setOpen] = useState(false);
+  const [open, setOpen, controlled] = useControllableOpen(openProp, onOpenChange);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -37,6 +44,13 @@ export function EntityFormDialog({
     setError(null);
     setFileName(null);
     setOpen(true);
+  }
+
+  // Sıfırlama kapanışta da: dışarıdan açıldığında openDialog çalışmaz.
+  function closeDialog() {
+    setOpen(false);
+    setError(null);
+    setFileName(null);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -85,14 +99,14 @@ export function EntityFormDialog({
       if (result?.error) {
         setError(result.error);
       } else {
-        setOpen(false);
+        closeDialog();
       }
     });
   }
 
   return (
     <>
-      {isEdit ? (
+      {controlled ? null : isEdit ? (
         <button
           type="button"
           onClick={openDialog}
@@ -109,7 +123,7 @@ export function EntityFormDialog({
 
       <Modal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={closeDialog}
         heading={isEdit ? label.editTitle : label.addTitle}
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -196,7 +210,7 @@ export function EntityFormDialog({
           <ModalActions>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={closeDialog}
               className={buttonClass({ variant: "secondary" })}
             >
               {t.common.cancel}
