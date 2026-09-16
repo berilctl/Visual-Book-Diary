@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app-header";
 import { BookFormDialog } from "@/components/books/book-form-dialog";
 import type { BookSummary } from "@/components/books/book-card";
 import { Library } from "@/components/books/library";
+import { ReadingStats } from "@/components/books/reading-stats";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookIcon } from "@/components/ui/icons";
 import type { Book } from "@/lib/books";
@@ -80,6 +81,7 @@ export default async function DashboardPage() {
             <p className="mt-1.5 text-sm text-ink-muted">
               {t.dashboard.greeting(displayName, list.length)}
             </p>
+            {list.length > 0 && <ReadingStats books={list} />}
           </div>
           {list.length > 0 && addButton}
         </div>

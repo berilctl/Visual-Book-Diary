@@ -32,6 +32,7 @@ type Props = {
     author?: string;
     start_date?: string | null;
     status?: string;
+    finished_at?: string | null;
     cover_url?: string | null;
   };
 };
@@ -67,6 +68,15 @@ export function BookFormDialog({
   const [fileName, setFileName] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
 
+  // Seçili durum: bitiş tarihi alanı yalnızca "Tamamlandı" iken görünür.
+  // Yalnızca kullanıcının değişikliği tutulur (null = dokunulmadı -> kitabın
+  // GÜNCEL verisi). Durumu doğrudan state'e kopyalayıp kapanışta sıfırlamak
+  // hatalı olurdu: kayıttan sonra kapanış kodu eski prop'u görür ve bir
+  // sonraki açılış eski durumu gösterirdi.
+  const [statusChoice, setStatusChoice] = useState<string | null>(null);
+  const initialStatus = initial?.status ?? "reading";
+  const status = statusChoice ?? initialStatus;
+
   useEffect(
     () => () => {
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
@@ -90,6 +100,7 @@ export function BookFormDialog({
   function openDialog() {
     setError(null);
     setCreatedId(null);
+    setStatusChoice(null);
     resetCover();
     setOpen(true);
   }
@@ -100,6 +111,7 @@ export function BookFormDialog({
     setOpen(false);
     setError(null);
     setCreatedId(null);
+    setStatusChoice(null);
     resetCover();
   }
 
@@ -143,8 +155,6 @@ export function BookFormDialog({
     event.preventDefault();
     setError(null);
     const formData = new FormData(event.currentTarget);
-    // Elle "Tamamlandı" seçilirse bitiş günü kullanıcının yerel günü olsun.
-    formData.set("today", localISODate());
 
     // Dosya baytları Server Action'a gönderilmez; ayrı upload rotasına gider.
     const file = formData.get("cover");
@@ -266,7 +276,11 @@ export function BookFormDialog({
           </Field>
 
           <Field label={t.book.status}>
-            <Select name="status" defaultValue={initial?.status ?? "reading"}>
+            <Select
+              name="status"
+              defaultValue={initialStatus}
+              onChange={(event) => setStatusChoice(event.target.value)}
+            >
               {BOOK_STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {t.bookStatus[s]}
@@ -274,6 +288,23 @@ export function BookFormDialog({
               ))}
             </Select>
           </Field>
+
+          {status === "completed" && (
+            <Field label={t.book.finishedAt} hint={t.book.finishedAtHint}>
+              <Input
+                type="date"
+                name="finished_at"
+                max={localISODate()}
+                // Başka durumdan "Tamamlandı"ya geçildiyse bugün; zaten
+                // tamamlanmış ama tarihi olmayan kitapta boş — aylar önce
+                // bitmiş bir kitaba "bugün" yazmak yanlış olurdu.
+                defaultValue={
+                  initial?.finished_at ??
+                  (initialStatus === "completed" ? "" : localISODate())
+                }
+              />
+            </Field>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-ink">{t.book.cover}</span>

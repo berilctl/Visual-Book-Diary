@@ -20,11 +20,58 @@ export type BookFormState =
   | undefined;
 
 // FormData'dan ortak alanları çıkar ve doğrula.
+// Formdaki bitiş tarihi. Alan yalnızca durum "Tamamlandı" iken formda olur;
+// yoksa present=false ve mevcut değere dokunulmaz. Boş bırakılırsa null
+// (ör. tarihi bilinmeyen eski bir kitap). Geçerli gerçek bir tarih olmalı,
+// gelecekte olamaz (saat dilimi payı: sunucu gününden en fazla 1 gün sonra)
+// ve başlangıç tarihinden önce olamaz.
+function parseFinishedAt(
+  formData: FormData,
+  startDate: string | null,
+  t: Dictionary,
+):
+  | { ok: true; present: boolean; value: string | null }
+  | { ok: false; error: string } {
+  if (!formData.has("finished_at")) {
+    return { ok: true, present: false, value: null };
+  }
+  const raw = String(formData.get("finished_at") ?? "").trim();
+  if (!raw) return { ok: true, present: true, value: null };
+
+  const parsed = Date.parse(`${raw}T00:00:00Z`);
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(raw) ||
+    Number.isNaN(parsed) ||
+    new Date(parsed).toISOString().slice(0, 10) !== raw
+  ) {
+    return { ok: false, error: t.book.finishedAtInvalid };
+  }
+
+  const serverDay = Date.parse(
+    `${new Date().toISOString().slice(0, 10)}T00:00:00Z`,
+  );
+  if (parsed - serverDay > 86_400_000) {
+    return { ok: false, error: t.book.finishedAtFuture };
+  }
+  // ISO 'YYYY-MM-DD' dizgeleri sözlük sırasıyla da doğru karşılaştırılır.
+  if (startDate && raw < startDate) {
+    return { ok: false, error: t.book.finishedBeforeStart };
+  }
+  return { ok: true, present: true, value: raw };
+}
+
 function parseBookFields(
   formData: FormData,
   t: Dictionary,
 ):
-  | { ok: true; title: string; author: string; start_date: string | null; status: BookStatus }
+  | {
+      ok: true;
+      title: string;
+      author: string;
+      start_date: string | null;
+      status: BookStatus;
+      finished: { present: boolean; value: string | null };
+    }
   | { ok: false; error: string } {
   const title = String(formData.get("title") ?? "").trim();
   const author = String(formData.get("author") ?? "").trim();
@@ -37,7 +84,17 @@ function parseBookFields(
   const rawStatus = formData.get("status");
   const status: BookStatus = isBookStatus(rawStatus) ? rawStatus : "reading";
 
-  return { ok: true, title, author, start_date, status };
+  const finished = parseFinishedAt(formData, start_date, t);
+  if (!finished.ok) return finished;
+
+  return {
+    ok: true,
+    title,
+    author,
+    start_date,
+    status,
+    finished: { present: finished.present, value: finished.value },
+  };
 }
 
 // İstemcinin yerel günü ("today" alanı). Bitiş tarihi kullanıcının takvimine
@@ -87,6 +144,7 @@ export async function createBook(
       author: fields.author,
       start_date: fields.start_date,
       status: fields.status,
+      ...(fields.finished.present && { finished_at: fields.finished.value }),
     })
     .select("id")
     .single();
@@ -130,17 +188,11 @@ export async function updateBook(
     status: fields.status,
   };
 
-  // Elle "Tamamlandı" seçildiyse ve bitiş günü yoksa bugünü yaz; okuma
-  // istatistiği bu tarihi kullanır. Varsa korunur (geçmiş kayıt ezilmez).
-  if (fields.status === "completed") {
-    const { data: current } = await supabase
-      .from("books")
-      .select("finished_at")
-      .eq("id", id)
-      .maybeSingle();
-    if (current && !current.finished_at) {
-      updates.finished_at = clientLocalDate(formData.get("today"));
-    }
+  // Bitiş tarihi formdan gelir (alan yalnızca "Tamamlandı" iken formda).
+  // Önceden elle tamamlandı seçilince sunucu bugünü yazıyordu; bu, aylar önce
+  // bitmiş bir kitaba yanlış tarih veriyordu.
+  if (fields.finished.present) {
+    updates.finished_at = fields.finished.value;
   }
 
   const coverUrl = String(formData.get("cover_url") ?? "").trim();

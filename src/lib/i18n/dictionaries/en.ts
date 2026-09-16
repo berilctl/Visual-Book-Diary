@@ -109,6 +109,11 @@ export const en: Dictionary = {
     authorPlaceholder: "e.g. Bram Stoker",
     startDate: "Start date",
     status: "Status",
+    finishedAt: "Finished on",
+    finishedAtHint: "Reading stats use this date.",
+    finishedAtInvalid: "Invalid finish date.",
+    finishedAtFuture: "The finish date can't be in the future.",
+    finishedBeforeStart: "The finish date can't be before the start date.",
     cover: "Cover",
     chooseCover: "Choose Cover",
     changeCover: "Change",
@@ -143,6 +148,20 @@ export const en: Dictionary = {
     notRated: "Not rated yet",
     invalid: "Invalid rating.",
     onlyCompleted: "Only finished books can be rated.",
+  },
+
+  stats: {
+    finishedThisYear: (n) =>
+      n === 0
+        ? "You haven't finished a book this year yet"
+        : `You've finished ${plural(n, "book", "books")} this year`,
+    averageRating: (average) => `average ${average}`,
+    averageRatingLabel: (average) =>
+      `Average rating of this year's books: ${average} out of 5`,
+    missingDates: (n) =>
+      n === 1
+        ? "1 finished book has no finish date, so it isn't counted. Edit it to add one."
+        : `${n} finished books have no finish date, so they aren't counted. Edit them to add one.`,
   },
 
   library: {

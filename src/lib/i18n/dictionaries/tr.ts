@@ -106,6 +106,11 @@ export const tr = {
     authorPlaceholder: "örn. Bram Stoker",
     startDate: "Başlangıç tarihi",
     status: "Durum",
+    finishedAt: "Bitiş tarihi",
+    finishedAtHint: "Okuma istatistiği bu tarihi kullanır.",
+    finishedAtInvalid: "Geçersiz bitiş tarihi.",
+    finishedAtFuture: "Bitiş tarihi gelecekte olamaz.",
+    finishedBeforeStart: "Bitiş tarihi başlangıç tarihinden önce olamaz.",
     cover: "Kapak",
     chooseCover: "Kapak Seç",
     changeCover: "Değiştir",
@@ -140,6 +145,16 @@ export const tr = {
     notRated: "Henüz puan verilmedi",
     invalid: "Geçersiz puan.",
     onlyCompleted: "Yalnızca tamamlanan kitaplar puanlanabilir.",
+  },
+
+  stats: {
+    finishedThisYear: (n: number) =>
+      n === 0 ? "Bu yıl henüz kitap bitirmedin" : `Bu yıl ${n} kitap bitirdin`,
+    averageRating: (average: string) => `ortalama ${average}`,
+    averageRatingLabel: (average: string) =>
+      `Bu yıl bitirdiğin kitapların ortalama puanı 5 üzerinden ${average}`,
+    missingDates: (n: number) =>
+      `${n} tamamlanan kitabın bitiş tarihi yok, bu yüzden sayılmıyor. Düzenleyerek tarih ekleyebilirsin.`,
   },
 
   library: {
