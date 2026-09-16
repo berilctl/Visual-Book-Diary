@@ -52,7 +52,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // Giriş yapmış kullanıcı landing/login (/) sayfasına giderse -> /dashboard
-  if (user && path === "/") {
+  // Yalnızca sayfa gezinmelerinde (GET/HEAD). Landing'deki Server Action'lar
+  // da "/"a POST edilir; oturum varken onları yönlendirmek (307 metodu korur)
+  // isteği POST /dashboard'a taşır, yanıt RSC olmadığı için istemci
+  // "An unexpected response was received from the server" hatası fırlatır.
+  // Action'lar kendi redirect'lerini zaten yapıyor.
+  const isNavigation = request.method === "GET" || request.method === "HEAD";
+  if (user && path === "/" && isNavigation) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return copyCookies(supabaseResponse, NextResponse.redirect(url));
