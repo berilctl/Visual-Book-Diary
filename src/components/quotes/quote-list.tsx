@@ -52,7 +52,11 @@ export function QuoteList({
                 <blockquote className="whitespace-pre-wrap font-serif text-lg leading-relaxed text-ink">
                   “{quote.content}”
                 </blockquote>
-                <DeleteQuoteButton id={quote.id} bookId={bookId} />
+                <DeleteQuoteButton
+                  id={quote.id}
+                  bookId={bookId}
+                  content={quote.content}
+                />
               </div>
 
               {(quote.page_or_chapter || characterName) && (

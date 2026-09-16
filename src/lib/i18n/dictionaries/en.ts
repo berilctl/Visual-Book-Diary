@@ -22,6 +22,7 @@ export const en: Dictionary = {
     delete: "Delete",
     saving: "Saving…",
     deleting: "Deleting…",
+    irreversible: "This can't be undone.",
     logout: "Sign Out",
     themeToggle: "Toggle light/dark theme",
   },
@@ -119,10 +120,9 @@ export const en: Dictionary = {
     startedOn: (date) => `Started ${date}`,
     noContent: "Nothing added yet",
     tabsLabel: "Book contents",
-    deleteConfirm: (title) =>
-      `You're about to delete "${title}".\n\n` +
-      "ALL characters, places and quotes in this book will be permanently " +
-      "deleted too. This can't be undone.\n\nContinue?",
+    deleteTitle: "Delete book",
+    deleteBody: (title) =>
+      `"${title}" and all of its characters, places, quotes and images will be permanently deleted.`,
   },
 
   finish: {
@@ -162,6 +162,9 @@ export const en: Dictionary = {
       emptyHint:
         "Add your first character card — write a description and upload an image if you like.",
       count: (n) => plural(n, "character", "characters"),
+      deleteTitle: "Delete character",
+      deleteBody: (name) =>
+        `The "${name}" card and its image will be permanently deleted. Quotes linked to this character are kept; only the link is removed.`,
       namePlaceholder: "e.g. Mina Harker",
       descriptionPlaceholder: "Appearance, personality, key traits…",
       tagsPlaceholder: "comma-separated: Vampire, Antagonist",
@@ -175,6 +178,9 @@ export const en: Dictionary = {
       emptyHint:
         "Add your first place card — write a description and upload an image if you like.",
       count: (n) => plural(n, "place", "places"),
+      deleteTitle: "Delete place",
+      deleteBody: (name) =>
+        `The "${name}" card and its image will be permanently deleted.`,
       namePlaceholder: "e.g. Whitby Abbey",
       descriptionPlaceholder: "Appearance, atmosphere, role in the story…",
       tagsPlaceholder: "comma-separated: Castle, Village, Mysterious",
@@ -193,7 +199,6 @@ export const en: Dictionary = {
       "Current image. Choose a new file to replace it; otherwise it stays.",
     editAria: (name) => `Edit ${name}`,
     deleteAria: (name) => `Delete ${name}`,
-    deleteConfirm: (name) => `Delete "${name}"? This can't be undone.`,
     nameRequired: "Name is required.",
   },
 
@@ -213,7 +218,8 @@ export const en: Dictionary = {
       "Add a line you loved — with its page or chapter and, if you like, a character.",
     count: (n) => plural(n, "quote", "quotes"),
     deleteAria: "Delete quote",
-    deleteConfirm: "Delete this quote? This can't be undone.",
+    deleteTitle: "Delete quote",
+    deleteBody: (excerpt) => `“${excerpt}” will be permanently deleted.`,
     contentRequired: "Quote text is required.",
     characterNotInBook: "The selected character doesn't belong to this book.",
   },

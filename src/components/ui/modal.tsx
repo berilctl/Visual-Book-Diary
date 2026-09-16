@@ -28,15 +28,23 @@ export function Modal({
   open,
   onClose,
   heading,
+  description,
+  role = "dialog",
   children,
 }: {
   open: boolean;
   onClose: () => void;
   heading: string;
+  // Verilirse başlığın altında gösterilir ve aria-describedby ile bağlanır:
+  // ekran okuyucu pencereyi açıklamasıyla birlikte duyurur.
+  description?: ReactNode;
+  // "alertdialog": kullanıcının yanıt vermesi gereken onay pencereleri.
+  role?: "dialog" | "alertdialog";
   children: ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
+  const descriptionId = useId();
 
   // onClose çağıranlarda satır içi arrow fonksiyon; her render'da kimliği
   // değişiyor. Ref'te tutuluyor ki asıl efekt yalnızca `open` değişince
@@ -103,15 +111,24 @@ export function Modal({
       />
       <div
         ref={panelRef}
-        role="dialog"
+        role={role}
         aria-modal="true"
         aria-labelledby={headingId}
+        aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={`relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto p-6 shadow-lift ${cardClass}`}
       >
         <h2 id={headingId} className="mb-5 font-serif text-xl text-ink">
           {heading}
         </h2>
+        {description && (
+          <div
+            id={descriptionId}
+            className="-mt-2 mb-6 text-sm leading-relaxed text-ink-muted"
+          >
+            {description}
+          </div>
+        )}
         {children}
       </div>
     </div>

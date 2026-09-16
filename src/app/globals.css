@@ -42,6 +42,7 @@
   /* Durum renkleri */
   --danger: #a8322b;
   --danger-soft: #f8e6e3;
+  --danger-contrast: #fffaf5; /* danger zeminin üzerindeki metin rengi */
   --success: #4a6435;
   --success-soft: #e9efe1;
 }
@@ -74,6 +75,7 @@
 
     --danger: #e08a80;
     --danger-soft: #33201d;
+    --danger-contrast: #21100f;
     --success: #a8c088;
     --success-soft: #22291a;
   }
@@ -106,6 +108,7 @@
 
   --danger: #e08a80;
   --danger-soft: #33201d;
+  --danger-contrast: #21100f;
   --success: #a8c088;
   --success-soft: #22291a;
 }
@@ -150,6 +153,7 @@
 
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-danger-contrast: var(--danger-contrast);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
 

@@ -19,6 +19,7 @@ export const tr = {
     delete: "Sil",
     saving: "Kaydediliyor…",
     deleting: "Siliniyor…",
+    irreversible: "Bu işlem geri alınamaz.",
     logout: "Çıkış Yap",
     themeToggle: "Açık/koyu temayı değiştir",
   },
@@ -116,10 +117,9 @@ export const tr = {
     startedOn: (date: string) => `Başlangıç: ${date}`,
     noContent: "Henüz içerik yok",
     tabsLabel: "Kitap içeriği",
-    deleteConfirm: (title: string) =>
-      `"${title}" kitabını silmek üzeresin.\n\n` +
-      "Bu kitaba bağlı TÜM karakterler, mekanlar ve alıntılar da kalıcı " +
-      "olarak silinecek. Bu işlem geri alınamaz.\n\nDevam edilsin mi?",
+    deleteTitle: "Kitabı sil",
+    deleteBody: (title: string) =>
+      `"${title}" ve bu kitaba ait tüm karakterler, mekanlar, alıntılar ve görseller kalıcı olarak silinecek.`,
   },
 
   finish: {
@@ -160,6 +160,10 @@ export const tr = {
       emptyHint:
         "İlk karakter kartını ekle — betimlemesini yaz, istersen bir görsel yükle.",
       count: (n: number) => `${n} karakter`,
+      deleteTitle: "Karakteri sil",
+      // Alıntılar korunur: quotes.character_id ON DELETE SET NULL.
+      deleteBody: (name: string) =>
+        `"${name}" kartı ve görseli kalıcı olarak silinecek. Bu karaktere bağlı alıntılar silinmez, yalnızca karakter bağlantıları kalkar.`,
       namePlaceholder: "örn. Mina Harker",
       descriptionPlaceholder: "Görünüş, kişilik, önemli özellikler…",
       tagsPlaceholder: "virgülle ayır: Vampir, Antagonist",
@@ -173,6 +177,9 @@ export const tr = {
       emptyHint:
         "İlk mekan kartını ekle — betimlemesini yaz, istersen bir görsel yükle.",
       count: (n: number) => `${n} mekan`,
+      deleteTitle: "Mekanı sil",
+      deleteBody: (name: string) =>
+        `"${name}" kartı ve görseli kalıcı olarak silinecek.`,
       namePlaceholder: "örn. Whitby Manastırı",
       descriptionPlaceholder: "Görünüş, atmosfer, hikâyedeki önemi…",
       tagsPlaceholder: "virgülle ayır: Şato, Köy, Gizemli",
@@ -192,8 +199,6 @@ export const tr = {
       "Mevcut görsel. Değiştirmek için yeni dosya seç; dokunmazsan korunur.",
     editAria: (name: string) => `${name} düzenle`,
     deleteAria: (name: string) => `${name} sil`,
-    deleteConfirm: (name: string) =>
-      `"${name}" silinsin mi? Bu işlem geri alınamaz.`,
     nameRequired: "İsim zorunludur.",
   },
 
@@ -213,7 +218,8 @@ export const tr = {
       "Sevdiğin bir cümleyi ekle — sayfa/bölüm ve istersen bir karakterle birlikte.",
     count: (n: number) => `${n} alıntı`,
     deleteAria: "Alıntıyı sil",
-    deleteConfirm: "Bu alıntı silinsin mi? Bu işlem geri alınamaz.",
+    deleteTitle: "Alıntıyı sil",
+    deleteBody: (excerpt: string) => `“${excerpt}” kalıcı olarak silinecek.`,
     contentRequired: "Alıntı metni zorunludur.",
     characterNotInBook: "Seçilen karakter bu kitaba ait değil.",
   },

@@ -7,7 +7,8 @@ export type ButtonVariant =
   | "secondary"
   | "ghost"
   | "danger"
-  | "dangerQuiet";
+  | "dangerQuiet"
+  | "destructive";
 
 export type ButtonSize = "sm" | "md" | "icon";
 
@@ -34,6 +35,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   ghost: "text-ink-muted hover:bg-surface-sunken hover:text-ink",
   danger: "border border-danger/40 text-danger hover:bg-danger-soft",
   dangerQuiet: "text-danger hover:bg-danger-soft",
+  // Onay penceresindeki son adım: geri alınamaz işlemi dolgun renkle ayırır.
+  destructive: "bg-danger text-danger-contrast hover:opacity-90",
 };
 
 export function buttonClass({
