@@ -74,8 +74,8 @@ export async function register(
     return { error: t.auth.passwordTooShort };
   }
 
-// The unique index in the database is the real guarantee; this check only
-// exists to produce a readable message.
+  // The unique index in the database is the real guarantee; this check only
+  // exists to produce a readable message.
   const existing = await findUserIdByUsername(username);
   if (!existing.ok) return { error: t.errors.serviceUnavailable };
   if (existing.value) return { error: t.auth.usernameTaken };
@@ -88,19 +88,19 @@ export async function register(
   });
 
   if (error) {
-// If someone else took the name between this check and signUp, the unique
-// index makes the insert in handle_new_user fail, and Supabase only reports
-// it through this generic message.
+    // If someone else took the name between this check and signUp, the unique
+    // index makes the insert in handle_new_user fail, and Supabase only reports
+    // it through this generic message.
     if (/database error saving new user/i.test(error.message)) {
       return { error: t.auth.usernameRace };
     }
-// A message from Supabase Auth itself (an invalid email, for example). These
-// only come back in English; unknown error types cannot be translated.
+    // A message from Supabase Auth itself (an invalid email, for example). These
+    // only come back in English; unknown error types cannot be translated.
     return { error: error.message };
   }
 
-// With email confirmation disabled the session starts right away -> dashboard.
-// With it enabled, session is null -> tell the user to check their inbox.
+  // With email confirmation disabled the session starts right away -> dashboard.
+  // With it enabled, session is null -> tell the user to check their inbox.
   if (data.session) {
     redirect("/dashboard");
   }

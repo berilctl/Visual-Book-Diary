@@ -27,10 +27,10 @@ export default async function DashboardPage() {
   const t = await getDictionary();
   const displayName = profile?.username ?? user.email ?? t.dashboard.fallbackName;
 
-// Books plus per-book card counts. The child tables are fetched once and
-// grouped in JS rather than per book (no N+1); row-level security already
-// limits them to the user's rows. Card images are no longer needed here — the
-// cover comes from the book itself.
+  // Books plus per-book card counts. The child tables are fetched once and
+  // grouped in JS rather than per book (no N+1); row-level security already
+  // limits them to the user's rows. Card images are no longer needed here — the
+  // cover comes from the book itself.
   const [{ data: books }, { data: characters }, { data: locations }, { data: quotes }] =
     await Promise.all([
       supabase.from("books").select("*").order("created_at", { ascending: false }),

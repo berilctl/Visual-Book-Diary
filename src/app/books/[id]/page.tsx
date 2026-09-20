@@ -28,8 +28,8 @@ export default async function BookDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
-// Row-level security only returns the user's own book; someone else's book or
-// a missing id yields 0 rows -> null -> 404.
+  // Row-level security only returns the user's own book; someone else's book or
+  // a missing id yields 0 rows -> null -> 404.
   const { data: book } = await supabase
     .from("books")
     .select("*")
@@ -38,8 +38,8 @@ export default async function BookDetailPage({
 
   if (!book) notFound();
 
-// Characters, locations and quotes in parallel (again scoped to the user by
-// row-level security).
+  // Characters, locations and quotes in parallel (again scoped to the user by
+  // row-level security).
   const [{ data: characters }, { data: locations }, { data: quotes }] =
     await Promise.all([
       supabase

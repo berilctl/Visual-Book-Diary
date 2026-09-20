@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const PROTECTED_PREFIXES = ["/dashboard", "/books"];
 
 export async function proxy(request: NextRequest) {
-// getUser() may refresh cookies; the refreshed ones are written to this response.
+  // getUser() may refresh cookies; the refreshed ones are written to this response.
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -33,8 +33,8 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-// IMPORTANT: do not put code between createServerClient and getUser(), or
-// sessions start dropping at random and the cause is very hard to find.
+  // IMPORTANT: do not put code between createServerClient and getUser(), or
+  // sessions start dropping at random and the cause is very hard to find.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -44,19 +44,19 @@ export async function proxy(request: NextRequest) {
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
 
-// Signed-out user on a protected route -> /
+  // Signed-out user on a protected route -> /
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return copyCookies(supabaseResponse, NextResponse.redirect(url));
   }
 
-// Signed-in user on the landing page -> /dashboard, but only for navigations
-// (GET/HEAD). The landing page's Server Actions POST to "/" as well, and a 307
-// preserves the method, so redirecting them would turn the request into
-// POST /dashboard; the response is not an RSC payload and the client throws
-// "An unexpected response was received from the server". The actions already
-// handle their own redirects.
+  // Signed-in user on the landing page -> /dashboard, but only for navigations
+  // (GET/HEAD). The landing page's Server Actions POST to "/" as well, and a 307
+  // preserves the method, so redirecting them would turn the request into
+  // POST /dashboard; the response is not an RSC payload and the client throws
+  // "An unexpected response was received from the server". The actions already
+  // handle their own redirects.
   const isNavigation = request.method === "GET" || request.method === "HEAD";
   if (user && path === "/" && isNavigation) {
     const url = request.nextUrl.clone();
@@ -75,6 +75,6 @@ function copyCookies(from: NextResponse, to: NextResponse) {
 }
 
 export const config = {
-// Run on every route except static files and images.
+  // Run on every route except static files and images.
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)"],
 };
