@@ -3,7 +3,6 @@
 
 > **Versiyon:** 2.2 — AI ile görsel üretimi kaldırıldı; görseller yalnızca dosya yükleme ile eklenir.
 > *(2.1: harici URL ile görsel ekleme kaldırılmıştı.)*
-> **Build aracı:** Claude Code ile sıfırdan geliştirilecek.
 
 ---
 
@@ -228,7 +227,7 @@ export async function uploadImage(bytes: Buffer, userId: string, bookId: string)
 
 ---
 
-### 9. Suggested Build Order (Claude Code için önerilen sıra)
+### 9. Suggested Build Order (Önerilen geliştirme sırası)
 1. **Proje iskeleti:** Next.js (App Router, TS) + Tailwind kurulumu, Supabase client (server + browser) kurulumu, env yapısı.
 2. **DB temeli:** `schema.sql` — tablolar + index'ler + `handle_new_user` trigger'ı + tüm RLS politikaları + Storage bucket & policy. (Bölüm 4 & 5.)
 3. **Auth:** Login/Register akışı, korumalı route'lar.

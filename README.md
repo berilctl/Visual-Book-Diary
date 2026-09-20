@@ -12,6 +12,8 @@ Most reading trackers stop at "finished / not finished". This one is about what 
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres_·_Auth_·_Storage-3ECF8E?logo=supabase&logoColor=white)
 
+![The library: book covers with status filters and reading stats](docs/screenshots/library-en.webp)
+
 ---
 
 ## Features
@@ -29,6 +31,19 @@ Most reading trackers stop at "finished / not finished". This one is about what 
 **Light & dark themes** — Chosen manually or inherited from the OS, applied in the first frame by a synchronous script so there is no flash of the wrong theme.
 
 **Accounts** — Sign in with either an email address or a username.
+
+---
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Landing page with the sign-up form](docs/screenshots/landing-en.webp) | ![Add book dialog with cover upload](docs/screenshots/add-book-en.webp) |
+| Landing and sign-up | Adding a book, with cover upload |
+
+![Finishing a book: confetti and a star rating prompt](docs/screenshots/finish-en.webp)
+
+Marking a book finished — confetti, and a rating you can skip.
 
 ---
 
@@ -157,4 +172,6 @@ Accessibility was treated as part of the work, not a pass at the end: focus trap
 
 ## About
 
-A personal project, built end to end — product requirements ([`requirements.md`](requirements.md)), schema, design system and implementation.
+A personal project, built end to end — product requirements ([`docs/requirements.md`](docs/requirements.md), in Turkish), schema, design system and implementation.
+
+Licensed under the [MIT License](LICENSE).

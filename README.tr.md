@@ -12,6 +12,8 @@ Bir kitaptan geriye kalanlar için kişisel bir okuma günlüğü: **karakterler
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres_·_Auth_·_Storage-3ECF8E?logo=supabase&logoColor=white)
 
+![Kitaplık: kapak kartları, durum filtreleri ve okuma istatistiği](docs/screenshots/library-tr.webp)
+
 ---
 
 ## Özellikler
@@ -29,6 +31,19 @@ Bir kitaptan geriye kalanlar için kişisel bir okuma günlüğü: **karakterler
 **Açık ve koyu tema** — Elle seçilir ya da işletim sisteminden gelir; senkron bir betikle ilk karede uygulanır, yanlış temanın parlaması yaşanmaz.
 
 **Hesaplar** — E-posta ya da kullanıcı adıyla giriş.
+
+---
+
+## Ekran görüntüleri
+
+| | |
+|---|---|
+| ![Kayıt formunun olduğu karşılama sayfası](docs/screenshots/landing-tr.webp) | ![Kapak yüklemeli kitap ekleme penceresi](docs/screenshots/add-book-tr.webp) |
+| Karşılama ve kayıt | Kitap ekleme, kapak yüklemesiyle |
+
+![Kitabı bitirme: konfeti ve puan penceresi](docs/screenshots/finish-en.webp)
+
+Kitabı bitirmek — konfeti ve atlanabilen bir puan penceresi.
 
 ---
 
@@ -157,4 +172,6 @@ Erişilebilirlik sona bırakılmış bir kontrol değil, işin parçası: pencer
 
 ## Hakkında
 
-Uçtan uca yapılmış kişisel bir proje: ürün gereksinimleri ([`requirements.md`](requirements.md)), şema, tasarım sistemi ve uygulama.
+Uçtan uca yapılmış kişisel bir proje: ürün gereksinimleri ([`docs/requirements.md`](docs/requirements.md)), şema, tasarım sistemi ve uygulama.
+
+[MIT Lisansı](LICENSE) ile lisanslanmıştır.
