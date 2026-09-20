@@ -82,6 +82,8 @@ export const tr = {
     usernameRace:
       "Kayıt tamamlanamadı; kullanıcı adı az önce alınmış olabilir.",
     passwordTooShort: "Şifre en az 6 karakter olmalıdır.",
+    signupsClosed:
+      "Şu an yeni kayıt alınmıyor. Hesabın varsa giriş yapabilirsin.",
     signupNotice:
       "Hesabın oluşturuldu. E-postanı onayladıktan sonra giriş yapabilirsin.",
   },

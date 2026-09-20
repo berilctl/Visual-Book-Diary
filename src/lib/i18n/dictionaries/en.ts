@@ -85,6 +85,8 @@ export const en: Dictionary = {
     usernameRace:
       "Sign-up couldn't be completed; the username may have just been taken.",
     passwordTooShort: "Password must be at least 6 characters.",
+    signupsClosed:
+      "Sign-ups are currently closed. If you have an account, you can sign in.",
     signupNotice:
       "Your account has been created. You can sign in after confirming your email.",
   },

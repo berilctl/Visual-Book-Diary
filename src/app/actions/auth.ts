@@ -88,6 +88,11 @@ export async function register(
   });
 
   if (error) {
+    // Sign-ups turned off in the project, or a Before User Created hook
+    // rejecting the request with this code (an account cap, for example).
+    if (error.code === "signup_disabled") {
+      return { error: t.auth.signupsClosed };
+    }
     // If someone else took the name between this check and signUp, the unique
     // index makes the insert in handle_new_user fail, and Supabase only reports
     // it through this generic message.
