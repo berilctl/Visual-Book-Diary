@@ -4,11 +4,11 @@ import { buttonClass } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "@/components/ui/icons";
 import { useI18n } from "@/components/i18n-provider";
 
-// Tema anahtarı — bilerek React state'i yok.
-// Hangi ikonun görüneceğine CSS karar veriyor: `dark:` variant'ı globals.css'te
-// hem OS tercihini hem `data-theme`'i izleyecek şekilde tanımlı. Böylece
-// hydration uyuşmazlığı ve efekt içinde setState (projede ESLint ile yasak)
-// gerekmiyor; ilk boyama layout'taki senkron betikle zaten doğru.
+// Theme switch — deliberately without React state.
+// CSS decides which icon is visible: the `dark:` variant in globals.css follows
+// both the OS preference and `data-theme`. That avoids a hydration mismatch and
+// setState inside an effect (banned by the project's ESLint config); the first
+// paint is already correct thanks to the synchronous script in the layout.
 export function ThemeToggle() {
   const { t } = useI18n();
 
@@ -23,7 +23,7 @@ export function ThemeToggle() {
     try {
       localStorage.setItem("theme", next);
     } catch {
-      // Gizli sekme / kapalı depolama: seçim yalnızca bu sayfa için geçerli olur.
+      // Private tab or blocked storage: the choice then applies to this page only.
     }
   }
 

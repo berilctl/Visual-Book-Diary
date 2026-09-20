@@ -1,53 +1,53 @@
 @import "tailwindcss";
 
 /* ===========================================================================
-   Kâğıt & Mürekkep — tema token'ları
+   Paper & Ink — theme tokens
    ---------------------------------------------------------------------------
-   Tek doğruluk kaynağı burasıdır. Bileşenler renkleri elle yazmaz; `bg-surface`,
-   `text-ink-muted`, `border-line` gibi token utility'lerini kullanır.
-   Üç durum tanımlıdır: light (varsayılan), OS karanlık tercihi ve
-   `data-theme` ile açık seçim (Adım 6'daki toggle bunu set edecek).
+   The single source of truth. Components never hard-code colours; they use
+   token utilities such as `bg-surface`, `text-ink-muted` and `border-line`.
+   Three states are defined: light (the default), the OS dark preference, and
+   an explicit choice through `data-theme`, which the theme toggle sets.
    =========================================================================== */
 
 :root {
   color-scheme: light;
 
-  /* Yüzeyler */
-  --paper: #faf6f0; /* sayfa zemini — sıcak kâğıt */
-  --surface: #ffffff; /* kart/modal yüzeyi */
-  --surface-sunken: #f3ece2; /* girintili alan: segment kontrol, kod, vs. */
+  /* Surfaces */
+  --paper: #faf6f0; /* page background — warm paper */
+  --surface: #ffffff; /* card and dialog surface */
+  --surface-sunken: #f3ece2; /* recessed areas: segmented controls, code, … */
 
-  /* Metin */
-  --ink: #1f1a15; /* ana metin — sıcak siyah */
-  --ink-muted: #6b6158; /* ikincil metin — kâğıt üzerinde 5.7:1 */
-  --ink-subtle: #7a6f64; /* meta/ipucu — kâğıt üzerinde 4.6:1 */
+  /* Text */
+  --ink: #1f1a15; /* body text — warm black */
+  --ink-muted: #6b6158; /* secondary text — 5.7:1 on paper */
+  --ink-subtle: #7a6f64; /* meta and hints — 4.6:1 on paper */
 
-  /* Çizgiler */
+  /* Lines */
   --line: #e3dace;
   --line-strong: #d3c6b4;
 
-  /* Aksan — cilt bordosu */
+  /* Accent — bookbinding burgundy */
   --accent: #8c2f39;
   --accent-hover: #75262f;
-  --accent-contrast: #fffaf5; /* aksan zemin üzerindeki metin */
-  --accent-soft: #f6e7e5; /* aksanın çok açık zemin tonu */
+  --accent-contrast: #fffaf5; /* text on an accent background */
+  --accent-soft: #f6e7e5; /* very light accent background */
 
-  /* İkincil aksan — yaldız */
-  --gold: #7d5b2e; /* metin olarak da okunur: kâğıtta 5.9:1, gold-soft üzerinde 5.3:1 */
+  /* Secondary accent — gilt */
+  --gold: #7d5b2e; /* legible as text too: 5.9:1 on paper, 5.3:1 on gold-soft */
   --gold-soft: #f5ead8;
 
-  /* Modal arka planı — her iki temada da koyu kalmalı */
+  /* Dialog backdrop — stays dark in both themes */
   --overlay: rgb(31 26 21 / 0.45);
 
-  /* Durum renkleri */
+  /* Status colours */
   --danger: #a8322b;
   --danger-soft: #f8e6e3;
-  --danger-contrast: #fffaf5; /* danger zeminin üzerindeki metin rengi */
+  --danger-contrast: #fffaf5; /* text on a danger background */
   --success: #4a6435;
   --success-soft: #e9efe1;
 }
 
-/* OS karanlık tercihi — kullanıcı açıkça light seçmediyse */
+/* The OS dark preference, unless the user explicitly chose light */
 :root:not([data-theme="light"]) {
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
@@ -81,7 +81,7 @@
   }
 }
 
-/* Açık seçim — toggle `data-theme="dark"` set ettiğinde OS'u ezer */
+/* An explicit choice: `data-theme="dark"` from the toggle overrides the OS */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
@@ -113,11 +113,11 @@
   --success-soft: #22291a;
 }
 
-/* Bileşenler artık token kullandığı için `dark:` utility'si hiçbir yerde
-   kullanılmıyor (Tailwind kullanılmayan variant için CSS üretmez). Yine de
-   tanımı duruyor: ileride biri `dark:` yazarsa varsayılan davranış yalnızca OS
-   tercihine bakar ve toggle'la çelişirdi; bu tanım onu token'larla aynı üçlü
-   mantığa bağlar. */
+/* Components use tokens, so the `dark:` utility is not used anywhere (and
+   Tailwind emits no CSS for an unused variant). The definition stays for the
+   next person who reaches for `dark:`: by default it would follow the OS
+   preference only and contradict the toggle, while this binds it to the same
+   three-state logic as the tokens. */
 @custom-variant dark {
   @media (prefers-color-scheme: dark) {
     &:where(:not([data-theme="light"], [data-theme="light"] *)) {
@@ -157,11 +157,11 @@
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
 
-  /* Tipografi — Inter (arayüz) + Fraunces (başlık/alıntı), layout.tsx'te yüklenir */
+  /* Typography — Inter for the interface, Fraunces for headings and quotes, both loaded in layout.tsx */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
 
-  /* Kâğıt hissi: ağır gölge yerine ince kenarlık + çok yumuşak ambient */
+  /* Paper feel: a thin border and a very soft ambient shadow, not a heavy one */
   --shadow-paper: 0 1px 2px rgb(31 26 21 / 0.04),
     0 8px 24px -12px rgb(31 26 21 / 0.1);
   --shadow-lift: 0 2px 4px rgb(31 26 21 / 0.05),
@@ -175,7 +175,7 @@
     font-family: var(--font-sans);
   }
 
-  /* Başlıklar serif — defter/editoryal his tek yerden gelir. */
+  /* Serif headings, defined once, carry the editorial feel */
   h1,
   h2,
   h3 {
@@ -183,9 +183,9 @@
     letter-spacing: -0.011em;
   }
 
-  /* Uygulama genelinde görünür klavye odağı (daha önce hiç yoktu).
-     Kısaltma değil longhand kullanılıyor: kısaltma biçimiyle rengin
-     currentColor'da kaldığını ölçtük, longhand'de aksan rengi doğru geliyor. */
+  /* A visible keyboard focus ring across the app. Longhand rather than the
+     shorthand: with the shorthand the colour stayed at currentColor, while the
+     longhand properties apply the accent colour correctly. */
   :focus-visible {
     outline-width: 2px;
     outline-style: solid;

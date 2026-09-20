@@ -1,9 +1,9 @@
-// Türkçe arayüz metinleri — kaynak sözlük. en.ts bu dosyanın şeklini
-// (Dictionary tipi) birebir karşılamak zorunda; eksik anahtar derleme hatasıdır.
+// Turkish interface strings — the source dictionary. en.ts has to match its
+// shape (the Dictionary type) exactly; a missing key is a compile error.
 //
-// Sayıya ya da isme göre değişen metinler fonksiyon: dillerde söz dizimi ve
-// çoğul kuralları farklı ("5 karakter" / "5 characters", "X düzenle" /
-// "Edit X"), bu yüzden cümleler parça parça birleştirilmez.
+// Strings that vary with a number or a name are functions: syntax and plural
+// rules differ between languages ("5 karakter" / "5 characters", "X düzenle" /
+// "Edit X"), so sentences are never assembled from fragments.
 
 export const tr = {
   meta: {
@@ -177,7 +177,7 @@ export const tr = {
     dnf: "Yarım bırakıldı",
   },
 
-  // Karakter ve mekan kartları aynı bileşeni paylaşır; türe özgü metinler.
+  // Characters and locations share one component; these are the kind-specific strings.
   entityKinds: {
     characters: {
       tab: "Karakterler",
@@ -189,7 +189,7 @@ export const tr = {
         "İlk karakter kartını ekle — betimlemesini yaz, istersen bir görsel yükle.",
       count: (n: number) => `${n} karakter`,
       deleteTitle: "Karakteri sil",
-      // Alıntılar korunur: quotes.character_id ON DELETE SET NULL.
+      // Quotes survive: quotes.character_id is ON DELETE SET NULL.
       deleteBody: (name: string) =>
         `"${name}" kartı ve görseli kalıcı olarak silinecek. Bu karaktere bağlı alıntılar silinmez, yalnızca karakter bağlantıları kalkar.`,
       namePlaceholder: "örn. Mina Harker",
@@ -214,7 +214,7 @@ export const tr = {
     },
   },
 
-  // Karakter ve mekan için ortak metinler.
+  // Strings shared by characters and locations.
   entity: {
     name: "İsim",
     description: "Betimleme",

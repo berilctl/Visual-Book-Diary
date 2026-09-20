@@ -20,12 +20,12 @@ import { BookCover } from "./book-cover";
 type Props = {
   heading: string;
   submitLabel: string;
-  // Kendi tetikleyici butonu için; open verilirse (dışarıdan kontrol) çizilmez.
+  // For the component's own trigger button; not rendered when `open` is passed in.
   triggerLabel?: string;
   triggerVariant?: ButtonVariant;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  // Verilirse düzenleme modu:
+  // When given, the dialog is in edit mode:
   bookId?: string;
   initial?: {
     title?: string;
@@ -37,13 +37,13 @@ type Props = {
   };
 };
 
-// Kitap ekleme VE düzenleme için ortak modal + form (bookId varsa düzenleme).
+// The shared dialog and form for adding AND editing a book (bookId means edit).
 //
-// Kapak akışı: yükleme hattı görseli var olan bir kitabın klasörüne yazdığı
-// için ekleme sırası "kitabı oluştur -> kapağı yükle -> kitaba bağla".
-// Kitap oluşup kapak yüklemesi başarısız olursa kitap zaten kaydedilmiştir;
-// kullanıcı tekrar "Ekle"ye basarsa ikinci bir kitap açılmasın diye oluşan
-// kitabın kimliği (createdId) saklanır ve sonraki deneme onu günceller.
+// Cover flow: the upload pipeline writes into an existing book's folder, so
+// adding goes "create the book -> upload the cover -> link it to the book".
+// If the book is created but the cover upload fails, the book is already
+// saved; the new book's id (createdId) is kept so that pressing "Add" again
+// updates that book instead of creating a second one.
 export function BookFormDialog({
   heading,
   submitLabel,
@@ -60,19 +60,19 @@ export function BookFormDialog({
   const [pending, startTransition] = useTransition();
   const [createdId, setCreatedId] = useState<string | null>(null);
 
-  // Kapak seçimi. previewUrl bir object URL; ref kopyası, bileşen kaldırılırken
-  // serbest bırakmak için (efekt içinde state okunmaz/yazılmaz).
+  // Cover selection. previewUrl is an object URL; the ref copy is what the
+  // cleanup on unmount revokes (an effect must not read or write state here).
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
 
-  // Seçili durum: bitiş tarihi alanı yalnızca "Tamamlandı" iken görünür.
-  // Yalnızca kullanıcının değişikliği tutulur (null = dokunulmadı -> kitabın
-  // GÜNCEL verisi). Durumu doğrudan state'e kopyalayıp kapanışta sıfırlamak
-  // hatalı olurdu: kayıttan sonra kapanış kodu eski prop'u görür ve bir
-  // sonraki açılış eski durumu gösterirdi.
+  // Selected status: the finish date field is only shown for "completed".
+  // Only the user's own change is tracked (null = untouched -> the book's
+  // CURRENT value). Copying the status into state and resetting it on close
+  // would be wrong: after a save the close handler still sees the old prop and
+  // the next open would show the previous status.
   const [statusChoice, setStatusChoice] = useState<string | null>(null);
   const initialStatus = initial?.status ?? "reading";
   const status = statusChoice ?? initialStatus;
@@ -105,8 +105,8 @@ export function BookFormDialog({
     setOpen(true);
   }
 
-  // Sıfırlama kapanışta: dışarıdan kontrolde (⋯ menüsü) openDialog hiç
-  // çalışmaz, bir sonraki açılış yine temiz başlasın.
+  // Reset on close, because when the dialog is controlled from the outside
+  // (the ⋯ menu) openDialog never runs and the next open has to start clean.
   function closeDialog() {
     setOpen(false);
     setError(null);
@@ -121,8 +121,8 @@ export function BookFormDialog({
     return t.upload.tooLarge(IMAGE_MAX_MB);
   }
 
-  // Tip/boyut kitap oluşturulmadan ÖNCE kontrol edilir: en sık hatalar
-  // yakalanır ve "kitap eklendi ama kapak yok" durumu çoğunlukla hiç oluşmaz.
+  // Type and size are checked BEFORE the book is created, so the common
+  // mistakes are caught and "book added but no cover" mostly never happens.
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     setError(null);
@@ -139,8 +139,8 @@ export function BookFormDialog({
     setRemoveCover(false);
   }
 
-  // Yeni seçilen dosya varsa onu geri alır (mevcut kapak geri görünür);
-  // yoksa mevcut kapağı kaldırılacak olarak işaretler.
+  // With a newly picked file this undoes the choice (the current cover comes
+  // back); otherwise it marks the existing cover for removal.
   function handleRemoveCover() {
     if (previewUrl) {
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -156,7 +156,7 @@ export function BookFormDialog({
     setError(null);
     const formData = new FormData(event.currentTarget);
 
-    // Dosya baytları Server Action'a gönderilmez; ayrı upload rotasına gider.
+    // File bytes never go to a Server Action; they go to the upload route.
     const file = formData.get("cover");
     formData.delete("cover");
     const coverFile = file instanceof File && file.size > 0 ? file : null;
@@ -173,7 +173,7 @@ export function BookFormDialog({
       const retryAfterCreate = !bookId && createdId !== null;
       let id = bookId ?? createdId;
 
-      // 1. Ekleme: kitabı oluştur (önceki denemede oluşmadıysa).
+      // 1. Adding: create the book, unless a previous attempt already did.
       if (!id) {
         const created = await createBook(undefined, formData);
         if (created?.error || !created?.id) {
@@ -184,7 +184,7 @@ export function BookFormDialog({
         setCreatedId(id);
       }
 
-      // 2. Kapak seçildiyse yükle.
+      // 2. Upload the cover, if one was picked.
       let coverUrl = "";
       if (coverFile) {
         const upload = new FormData();
@@ -200,7 +200,7 @@ export function BookFormDialog({
           if (res.ok) coverUrl = json.url;
           else if (json.error) message = json.error;
         } catch {
-          // Ağ hatası: genel mesaj kalır.
+          // Network error: the generic message stands.
         }
         if (!coverUrl) {
           setError(bookId ? message : t.book.coverFailedBookSaved);
@@ -208,8 +208,8 @@ export function BookFormDialog({
         }
       }
 
-      // 3. Düzenleme; ya da kapak eklenecek/kaldırılacak; ya da önceki denemede
-      //    oluşan kitaba form değişiklikleri uygulanacak.
+      // 3. Editing; or attaching/removing a cover; or applying the form
+      //    changes to the book a previous attempt created.
       if (bookId || coverUrl || retryAfterCreate) {
         formData.set("id", id);
         if (coverUrl) formData.set("cover_url", coverUrl);
@@ -222,7 +222,7 @@ export function BookFormDialog({
         }
       }
 
-      // Başarılı: revalidatePath sayfaları tazeler, modalı kapat.
+      // Success: revalidatePath refreshes the pages, so close the dialog.
       closeDialog();
     });
   }
@@ -295,9 +295,9 @@ export function BookFormDialog({
                 type="date"
                 name="finished_at"
                 max={localISODate()}
-                // Başka durumdan "Tamamlandı"ya geçildiyse bugün; zaten
-                // tamamlanmış ama tarihi olmayan kitapta boş — aylar önce
-                // bitmiş bir kitaba "bugün" yazmak yanlış olurdu.
+                // Today when the status just moved to "completed", and empty
+                // for a book that is already finished without a date — writing
+                // "today" onto a book finished months ago would be wrong.
                 defaultValue={
                   initial?.finished_at ??
                   (initialStatus === "completed" ? "" : localISODate())

@@ -2,10 +2,11 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Service-role Supabase istemcisi — RLS'i BYPASS eder.
- * YALNIZCA güvenilen server-side kodda (örn. Storage upload pipeline,
- * AI üretim route'ları) kullanılır. `server-only` importu bu modülün
- * yanlışlıkla client bundle'a girmesini derleme zamanında engeller.
+ * Service-role Supabase client — BYPASSES row-level security.
+ *
+ * Only for trusted server-side code that has to read across users. The
+ * `server-only` import makes it a build error for this module to end up in a
+ * client bundle.
  */
 export function createAdminClient() {
   return createClient(

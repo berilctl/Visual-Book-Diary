@@ -1,16 +1,15 @@
 import { BookIcon } from "@/components/ui/icons";
 
-// Kitap kapağı, 2:3 oranında (basılı kitap oranı). Genişliği çağıran belirler:
-// bileşen kendi genişlik sınıfı koymaz, çünkü aynı özgüllükteki w-full ile
-// dışarıdan gelen w-24 çakışınca CSS sırasına göre w-full kazanıyordu (detay
-// sayfasında kapak mobilde tam genişliğe yayılıyordu). Blok eleman olduğu için
-// genişlik verilmezse kapsayıcıyı doldurur.
+// A book cover in 2:3, the proportion of a printed book. The caller decides
+// the width: the component sets no width class of its own, because a w-full of
+// equal specificity would beat a w-24 passed in, depending on source order. As
+// a block element it fills its container when no width is given.
 //
-// - Kapak görseli varsa: görsel + sol kenarda hafif bir sırt gölgesi.
-// - Yoksa tipografik kapak: kitaba göre değişen yumuşak zemin, serif başlık,
-//   yazar. Kapaksız kitaplar da rafta bir kitap gibi görünür.
-// - "thumb" boyutu (form önizlemesi) metin sığmayacak kadar küçük; orada
-//   yalnızca kitap ikonu çizilir.
+// - With a cover image: the image plus a subtle spine shadow on the left edge.
+// - Without one: a typographic cover with a soft background derived from the
+//   book, a serif title and the author, so it still reads as a book on a shelf.
+// - At "thumb" size (the form preview) there is no room for text, so only the
+//   book icon is drawn.
 
 const TINTS = [
   "bg-accent-soft text-accent",
@@ -53,7 +52,7 @@ export function BookCover({
   if (coverUrl) {
     return (
       <div className={`${frame} bg-surface-sunken`}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- Storage görselleri; projede next/image bilinçli kullanılmıyor */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- Storage images; next/image is deliberately not used in this project */}
         <img
           src={coverUrl}
           alt=""
@@ -80,7 +79,7 @@ export function BookCover({
 
   return (
     <div className={`${frame} ${tint}`}>
-      {/* Sırt: sol kenarda koyu bir şerit, kapağa cilt hissi verir. */}
+      {/* Spine: a darker strip along the left edge that suggests a bound book. */}
       <span
         aria-hidden
         className="absolute inset-y-0 left-0 w-[7%] bg-current opacity-10"

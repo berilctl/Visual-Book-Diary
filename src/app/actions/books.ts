@@ -14,17 +14,16 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { removeBookFolder, removeImages } from "@/lib/storage/cleanup";
 import { isOwnBookImageUrl, ownImagePath } from "@/lib/storage/url";
 
-// id: createBook başarılı olunca yeni kitabın kimliği (kapak yüklemesi için).
+// id: the new book's id once createBook succeeds, used for the cover upload.
 export type BookFormState =
   | { ok?: boolean; error?: string; id?: string }
   | undefined;
 
-// FormData'dan ortak alanları çıkar ve doğrula.
-// Formdaki bitiş tarihi. Alan yalnızca durum "Tamamlandı" iken formda olur;
-// yoksa present=false ve mevcut değere dokunulmaz. Boş bırakılırsa null
-// (ör. tarihi bilinmeyen eski bir kitap). Geçerli gerçek bir tarih olmalı,
-// gelecekte olamaz (saat dilimi payı: sunucu gününden en fazla 1 gün sonra)
-// ve başlangıç tarihinden önce olamaz.
+// Reads and validates the finish date from the form. The field is only present
+// while the status is "completed"; otherwise present=false and the stored value
+// is left alone. An empty field means null (an old book whose date is unknown).
+// The value has to be a real calendar date, cannot be in the future (with one
+// day of timezone slack) and cannot precede the start date.
 function parseFinishedAt(
   formData: FormData,
   startDate: string | null,
@@ -53,7 +52,7 @@ function parseFinishedAt(
   if (parsed - serverDay > 86_400_000) {
     return { ok: false, error: t.book.finishedAtFuture };
   }
-  // ISO 'YYYY-MM-DD' dizgeleri sözlük sırasıyla da doğru karşılaştırılır.
+  // ISO 'YYYY-MM-DD' strings also compare correctly in lexicographic order.
   if (startDate && raw < startDate) {
     return { ok: false, error: t.book.finishedBeforeStart };
   }
@@ -97,11 +96,11 @@ function parseBookFields(
   };
 }
 
-// İstemcinin yerel günü ("today" alanı). Bitiş tarihi kullanıcının takvimine
-// göre kaydedilsin diye istemciden alınır, ama körü körüne değil: biçim ve
-// gerçek bir tarih olması kontrol edilir (2026-02-31 reddedilir) ve sunucunun
-// UTC gününden en fazla 1 gün sapabilir (saat dilimi farkı en çok ±14 saat).
-// Uymazsa sunucunun günü kullanılır.
+// The client's local day (the "today" field). It comes from the client so the
+// finish date follows the user's own calendar, but it is not trusted blindly:
+// the format and the date itself are validated (2026-02-31 is rejected) and it
+// may differ from the server's UTC day by at most one day (timezone offsets
+// span ±14 hours). Anything else falls back to the server's day.
 function clientLocalDate(raw: FormDataEntryValue | null): string {
   const serverDay = new Date().toISOString().slice(0, 10);
   if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
@@ -119,7 +118,7 @@ function clientLocalDate(raw: FormDataEntryValue | null): string {
   return dayDiff <= 1 ? raw : serverDay;
 }
 
-// Yeni kitap ekle. user_id ASLA client'tan alınmaz — server-side auth'tan gelir.
+// Creates a book. user_id NEVER comes from the client — it comes from the session.
 export async function createBook(
   _prev: BookFormState,
   formData: FormData,
@@ -134,8 +133,8 @@ export async function createBook(
   const fields = parseBookFields(formData, t);
   if (!fields.ok) return { error: fields.error };
 
-  // Kapak ayrı adımda eklenir: yükleme hattı görseli var olan bir kitabın
-  // klasörüne yazar, bu yüzden istemci önce kimliği alır.
+  // The cover is attached in a second step: the upload pipeline writes into an
+  // existing book's folder, so the client needs the id first.
   const { data, error } = await supabase
     .from("books")
     .insert({
@@ -155,15 +154,15 @@ export async function createBook(
   return { ok: true, id: data.id };
 }
 
-// Mevcut kitabı güncelle. RLS, kullanıcının yalnızca kendi kitabını
-// güncelleyebilmesini garanti eder.
+// Updates an existing book. Row-level security guarantees a user can only
+// update their own.
 //
-// Kapak (opsiyonel): "cover_url" verilirse yalnızca kullanıcının bu kitaba ait
-// Storage klasöründen gelebilir; "remove_cover=1" kapağı kaldırır. İkisi de
-// yoksa mevcut kapağa dokunulmaz.
+// Cover (optional): a "cover_url" is accepted only from the user's folder for
+// this book; "remove_cover=1" clears it. With neither present the cover is
+// left untouched.
 //
-// Storage temizliği: kayıt başarılıysa artık kullanılmayan eski kapak dosyası,
-// başarısızsa yeni yüklenen (hiçbir satıra bağlanamayan) dosya silinir.
+// Storage cleanup: on success the replaced cover file is removed, on failure
+// the freshly uploaded file that never got linked to a row.
 export async function updateBook(
   _prev: BookFormState,
   formData: FormData,
@@ -188,9 +187,9 @@ export async function updateBook(
     status: fields.status,
   };
 
-  // Bitiş tarihi formdan gelir (alan yalnızca "Tamamlandı" iken formda).
-  // Önceden elle tamamlandı seçilince sunucu bugünü yazıyordu; bu, aylar önce
-  // bitmiş bir kitaba yanlış tarih veriyordu.
+  // The finish date comes from the form, where the field only appears for
+  // "completed". Writing today's date on the server instead would put the
+  // wrong date on a book that was finished months ago.
   if (fields.finished.present) {
     updates.finished_at = fields.finished.value;
   }
@@ -206,7 +205,7 @@ export async function updateBook(
     updates.cover_url = coverUrl;
   }
 
-  // Kapak değişiyorsa, güncellemeden sonra silinecek eski kapağı önce oku.
+  // If the cover changes, read the old one before updating so it can be removed after.
   let previousCover: string | null = null;
   if (removeCover || coverUrl) {
     const { data: current } = await supabase
@@ -235,9 +234,9 @@ export async function updateBook(
   return { ok: true };
 }
 
-// "Bitirdim": durumu tamamlandıya çeker ve bitiş gününü yazar. Yalnızca
-// okunan/duraklatılan kitaplarda çalışır — zaten tamamlanmış bir kitabın
-// bitiş tarihi (çift tıklama ya da eski sekme) ezilmez.
+// Marks a book as finished and records the finish day. It only applies to
+// books that are being read or paused, so the finish date of an already
+// completed book is never overwritten by a double click or a stale tab.
 export async function finishBook(
   _prev: BookFormState,
   formData: FormData,
@@ -263,7 +262,7 @@ export async function finishBook(
     .select("id");
 
   if (error) return { error: error.message };
-  // 0 satır: kitap yok, başkasının (RLS) ya da zaten bitirilmiş.
+  // 0 rows: no such book, someone else's (RLS), or already finished.
   if (!data || data.length === 0) return { error: t.errors.bookNotFound };
 
   revalidatePath("/dashboard");
@@ -271,8 +270,8 @@ export async function finishBook(
   return { ok: true };
 }
 
-// 1–5 yıldız puan. Yalnızca tamamlanan kitaplar; aralık veritabanında da
-// CHECK ile zorunlu.
+// A 1–5 star rating, for finished books only. The range is enforced by a CHECK
+// constraint in the database as well.
 export async function rateBook(
   _prev: BookFormState,
   formData: FormData,
@@ -307,9 +306,9 @@ export async function rateBook(
   return { ok: true };
 }
 
-// Kitabı sil. İlişkili karakter/mekan/alıntılar DB'de ON DELETE CASCADE ile
-// otomatik temizlenir (PRD Bölüm 2). RLS sahipliği zorunlu kılar.
-// CASCADE Storage'a ulaşmaz: kitabın görsel klasörü ayrıca silinir.
+// Deletes a book. Its characters, locations and quotes go with it through
+// ON DELETE CASCADE, and row-level security enforces ownership. CASCADE does
+// not reach Storage, so the book's image folder is removed separately.
 export async function deleteBook(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {
@@ -320,8 +319,8 @@ export async function deleteBook(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;
 
-  // .select: gerçekten silinen satırı döndürür. RLS başkasının kitabını 0
-  // satırla "sessizce" reddeder; o durumda klasöre dokunulmaz.
+  // .select returns the row that was actually deleted. RLS rejects someone
+  // else's book silently with 0 rows, and then no folder is touched.
   const { data: deleted, error } = await supabase
     .from("books")
     .delete()

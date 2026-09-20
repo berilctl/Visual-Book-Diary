@@ -9,7 +9,7 @@ import { ownImagePath } from "@/lib/storage/url";
 
 export type EntityFormState = { ok?: boolean; error?: string } | undefined;
 
-// "Vampir, Antagonist" -> ["Vampir", "Antagonist"] (trim + boşları at + tekille).
+// "Vampire, Antagonist" -> ["Vampire", "Antagonist"] (trimmed, no blanks, deduplicated).
 function parseTags(raw: string): string[] {
   return Array.from(
     new Set(
@@ -21,9 +21,9 @@ function parseTags(raw: string): string[] {
   ).slice(0, 20);
 }
 
-// Karakter/mekan kartı ekle. image_url, client'ta önce /api/upload-image'e
-// yüklenen dosyanın kalıcı Storage URL'idir (Adım 6) — opsiyoneldir.
-// user_id server-side; RLS book sahipliğini zorunlu kılar.
+// Creates a character or location card. image_url is the permanent Storage URL
+// of a file the client uploaded to /api/upload-image first, and is optional.
+// user_id comes from the session; row-level security enforces book ownership.
 export async function createEntity(
   _prev: EntityFormState,
   formData: FormData,
@@ -43,7 +43,7 @@ export async function createEntity(
   if (!bookId) return { error: t.errors.bookIdMissing };
   if (!name) return { error: t.entity.nameRequired };
 
-  // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
+  // Ownership of book_id. RLS covers this too; here it gives a clear error.
   const { data: book } = await supabase
     .from("books")
     .select("id")
@@ -57,9 +57,9 @@ export async function createEntity(
   const tags = parseTags(String(formData.get("tags") ?? ""));
   const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
 
-  // image_url yalnızca kullanıcının bu kitaba ait Storage klasöründen gelebilir
-  // (PRD Bölüm 8 — harici/URL yok). Önceden yalnızca bucket ön eki kontrol
-  // ediliyordu; başka kullanıcının görsel adresi de kabul ediliyordu.
+  // image_url may only come from the user's Storage folder for this book —
+  // external URLs are not supported. Checking the bucket prefix alone would
+  // also accept another user's image address.
   const imagePath = imageUrl ? ownImagePath(imageUrl, user.id, bookId) : null;
   if (imageUrl && !imagePath) {
     return { error: t.errors.invalidImageSource };
@@ -73,7 +73,7 @@ export async function createEntity(
     tags,
   });
   if (error) {
-    // Yüklenen görsel hiçbir satıra bağlanamadı: sahipsiz kalmasın.
+    // The uploaded image could not be linked to any row; don't leave it orphaned.
     await removeImages(supabase, [imagePath]);
     return { error: error.message };
   }
@@ -82,10 +82,10 @@ export async function createEntity(
   return { ok: true };
 }
 
-// Karakter/mekan kartını güncelle. createEntity ile aynı güvenlik kalıbı:
-// kind allowlist guard, book_id sahipliği, image_url değişiyorsa Storage-prefix
-// kontrolü, RLS devrede. image_url yalnızca yeni bir görsel verildiğinde
-// güncellenir; boşsa mevcut görsel korunur.
+// Updates a character or location card, with the same guards as createEntity:
+// the kind allowlist, book ownership, the Storage path check when image_url
+// changes, and row-level security. image_url is only written when a new image
+// is supplied; an empty value keeps the current one.
 export async function updateEntity(
   _prev: EntityFormState,
   formData: FormData,
@@ -107,7 +107,7 @@ export async function updateEntity(
   if (!bookId) return { error: t.errors.bookIdMissing };
   if (!name) return { error: t.entity.nameRequired };
 
-  // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
+  // Ownership of book_id. RLS covers this too; here it gives a clear error.
   const { data: book } = await supabase
     .from("books")
     .select("id")
@@ -122,8 +122,8 @@ export async function updateEntity(
 
   const updates: Record<string, unknown> = { name, description, tags };
 
-  // image_url yalnızca yeni görsel verildiyse güncellenir; verildiyse de
-  // sadece kullanıcının bu kitaba ait klasöründen gelebilir (createEntity ile aynı).
+  // image_url is only updated when a new image was supplied, and then only
+  // from the user's folder for this book (same rule as createEntity).
   const imageUrl = String(formData.get("image_url") ?? "").trim();
   const imagePath = imageUrl ? ownImagePath(imageUrl, user.id, bookId) : null;
   let previousImage: string | null = null;
@@ -133,7 +133,7 @@ export async function updateEntity(
     }
     updates.image_url = imageUrl;
 
-    // Güncellemeden sonra silinecek eski görseli önce oku.
+  // Read the image that is about to be replaced so it can be removed afterwards.
     const { data: current } = await supabase
       .from(kind)
       .select("image_url")
@@ -148,8 +148,8 @@ export async function updateEntity(
     return { error: error.message };
   }
 
-  // Değiştirilen eski görsel artık kullanılmıyor. Kapsam kullanıcı klasörü:
-  // satırın kitabı formdaki bookId'den bağımsız doğrulanmış olmayabilir.
+  // The replaced image is no longer used. Scoped to the user's folder: the
+  // row's book may not be the bookId that came from the form.
   if (previousImage && previousImage !== imageUrl) {
     await removeImages(supabase, [ownImagePath(previousImage, user.id)]);
   }
@@ -158,8 +158,8 @@ export async function updateEntity(
   return { ok: true };
 }
 
-// Karakter/mekan kartı sil. RLS sahipliği zorunlu kılar; kartın görseli de
-// Storage'dan silinir.
+// Deletes a character or location card. Row-level security enforces ownership,
+// and the card's image is removed from Storage as well.
 export async function deleteEntity(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {
@@ -174,8 +174,8 @@ export async function deleteEntity(formData: FormData): Promise<void> {
   const bookId = String(formData.get("book_id") ?? "").trim();
   if (!id) return;
 
-  // .select: gerçekten silinen satırın görselini döndürür (RLS başkasının
-  // kartını 0 satırla reddeder; o durumda hiçbir dosyaya dokunulmaz).
+  // .select returns the image of the row that was really deleted (RLS rejects
+  // someone else's card with 0 rows, and then no file is touched).
   const { data: deleted, error } = await supabase
     .from(kind)
     .delete()

@@ -18,7 +18,7 @@ export function DeleteEntityButton({
   bookId: string;
   id: string;
   name: string;
-  // Verilirse kendi butonu çizilmez, pencere dışarıdan (⋯ menüsü) açılır.
+  // When given, the component renders no button of its own and is opened from the ⋯ menu.
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {

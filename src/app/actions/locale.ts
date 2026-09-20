@@ -5,9 +5,9 @@ import { LOCALE_COOKIE, isLocale } from "@/lib/i18n/config";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
-// Dil seçimini çereze yazar. Form action'ı olarak çağrıldığında Next,
-// güncel arayüzü aynı istekte geri döner (Next 16 cookies dokümanı), bu yüzden
-// ayrıca router.refresh() gerekmez.
+// Stores the chosen language in a cookie. Called as a form action, Next
+// returns the re-rendered interface in the same request, so no extra
+// router.refresh() is needed.
 export async function setLocale(formData: FormData): Promise<void> {
   const locale = formData.get("locale");
   if (!isLocale(locale)) return;
@@ -17,7 +17,7 @@ export async function setLocale(formData: FormData): Promise<void> {
     path: "/",
     maxAge: ONE_YEAR,
     sameSite: "lax",
-    // İstemci kodu çereze erişmiyor; dil, layout'tan provider'a prop olarak geliyor.
+    // Client code never reads the cookie; the locale reaches the provider as a prop from the layout.
     httpOnly: true,
   });
 }

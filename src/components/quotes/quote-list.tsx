@@ -9,7 +9,7 @@ import { useI18n } from "@/components/i18n-provider";
 import { QuoteFormDialog } from "./quote-form-dialog";
 import { DeleteQuoteButton } from "./delete-quote-button";
 
-// Alıntılar düz liste görünümünde (masonry değil — PRD Bölüm 7).
+// Quotes are shown as a plain list rather than a masonry grid.
 export function QuoteList({
   bookId,
   quotes,

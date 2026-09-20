@@ -7,8 +7,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const EXCERPT_LENGTH = 90;
 
-// Pencerede alıntının başı gösterilir: aynı sayfada birden çok alıntı varken
-// hangisinin silineceği belli olsun.
+// The dialog shows the beginning of the quote, so it is clear which one is
+// about to be deleted when several are on screen.
 function excerpt(text: string) {
   const flat = text.replace(/\s+/g, " ").trim();
   return flat.length > EXCERPT_LENGTH

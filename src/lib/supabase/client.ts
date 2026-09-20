@@ -1,9 +1,9 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 /**
- * Browser (client component) Supabase istemcisi.
- * Yalnızca public env değişkenlerini kullanır; RLS aktif olduğu için
- * anon key ile yapılan her sorgu kullanıcının kendi verisiyle sınırlıdır.
+ * Supabase client for the browser.
+ * Uses public environment variables only; with row-level security enabled,
+ * every query made with the anon key is limited to the user's own data.
  */
 export function createClient() {
   return createBrowserClient(

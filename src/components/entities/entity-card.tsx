@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteEntityButton } from "./delete-entity-button";
 import { EntityFormDialog } from "./entity-form-dialog";
 
-// Masonry'de kartların yükseklikleri görselin doğal en-boy oranıyla değişir;
-// bu yüzden sabit boyutlu next/image yerine düz <img> + w-full/h-auto kullanıyoruz.
+// In a masonry layout card heights follow the image's natural aspect ratio, so
+// this uses a plain <img> with w-full/h-auto rather than a fixed-size next/image.
 export function EntityCard({
   kind,
   bookId,
@@ -26,14 +26,14 @@ export function EntityCard({
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
-    // overflow-hidden kartta değil görselde: ⋯ menüsü kısa kartlarda kartın
-    // dışına taşar, kırpılmamalı.
+    // overflow-hidden sits on the image, not the card: on short cards the ⋯
+    // menu extends past the card and must not be clipped.
     <div
       className={`group mb-4 break-inside-avoid transition hover:shadow-lift ${cardClass}`}
     >
       {entity.image_url && (
         <div className="overflow-hidden rounded-t-[calc(1rem-1px)]">
-          {/* eslint-disable-next-line @next/next/no-img-element -- masonry doğal oran gerektirir */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- masonry needs the natural aspect ratio */}
           <img
             src={entity.image_url}
             alt={entity.name}

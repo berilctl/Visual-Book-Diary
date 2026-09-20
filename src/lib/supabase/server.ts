@@ -2,9 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
- * Server (Server Component / Route Handler / Server Action) Supabase istemcisi.
- * Cookie tabanlı oturumu okur ve yeniler. Anon key kullanır — RLS korumayı
- * üstlenir. Service role key BU dosyada KULLANILMAZ (bkz. PRD Bölüm 8).
+ * Supabase client for Server Components, Route Handlers and Server Actions.
+ * Reads and refreshes the cookie-based session. It uses the anon key, so
+ * row-level security does the authorisation; the service-role key is never
+ * used here.
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -23,8 +24,8 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Server Component'ten çağrıldığında `set` atılır; oturum
-            // yenileme middleware'de yapıldığı sürece bu güvenle yutulabilir.
+            // `set` throws when called from a Server Component. Safe to
+            // ignore as long as the session is refreshed in the proxy.
           }
         },
       },

@@ -1,17 +1,17 @@
 -- ============================================================================
--- 002 — Kitap kapağı
+-- 002 — Book cover
 -- ============================================================================
--- Mevcut bir Supabase veritabanına uygulamak için: SQL Editor'e yapıştır ve
--- Run. Yeni kurulumlarda gerekmez; schema.sql'deki books tablosu bu sütunu
--- zaten içeriyor. Tekrar çalıştırmak güvenli (idempotent).
+-- To apply this to an existing Supabase database: paste it into the SQL Editor
+-- and run it. New installations do not need it; the books table in schema.sql
+-- already has the column. Running it again is safe (idempotent).
 --
--- Yeni RLS politikası gerekmiyor: "own books" politikası tüm işlemleri
--- kapsıyor, kapak dosyaları da mevcut book-images bucket'ının
--- {userId}/{bookId}/ klasörüne yazılıyor.
+-- No new RLS policy is needed: the "own books" policy covers every operation,
+-- and cover files go into the {userId}/{bookId}/ folder of the existing
+-- book-images bucket.
 -- ============================================================================
 
 alter table public.books
   add column if not exists cover_url text;
 
--- PostgREST'in yeni sütunu hemen görmesi için şema önbelleğini tazele.
+-- Refresh the schema cache so PostgREST picks the new column up right away.
 notify pgrst, 'reload schema';

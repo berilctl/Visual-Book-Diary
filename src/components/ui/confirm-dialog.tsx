@@ -6,15 +6,16 @@ import { buttonClass } from "@/components/ui/button";
 import { Modal, ModalActions } from "@/components/ui/modal";
 import { useControllableOpen } from "@/components/ui/use-controllable-open";
 
-// Geri alınamaz işlemler için onay: tetikleyici buton + temaya uygun pencere.
-// Tarayıcının window.confirm() penceresinin yerine (koyu temaya uymuyor,
-// çevrilemeyen "OK/Cancel" butonları var).
+// Confirmation for irreversible actions: a trigger button plus a themed dialog.
+// It replaces the browser's window.confirm(), which ignores the dark theme and
+// has untranslatable "OK/Cancel" buttons.
 //
-// - role="alertdialog" ve açıklama aria-describedby ile bağlı.
-// - Açılışta odak "İptal"de (DOM'da ilk buton): yanlışlıkla Enter silmez.
-// - İşlem sürerken pencere kapatılamaz ve butonlar kilitlenir.
-// - open/onOpenChange verilirse dışarıdan kontrol edilir ve tetikleyici çizilmez
-//   (ör. ⋯ menüsünden açılır).
+// - role="alertdialog", with the description linked through aria-describedby.
+// - Focus starts on "Cancel" (the first button in the DOM), so a stray Enter
+//   never deletes anything.
+// - While the action runs the dialog cannot be closed and the buttons are locked.
+// - Passing open/onOpenChange controls it from the outside and hides the
+//   trigger (it is then opened from the ⋯ menu, for example).
 export function ConfirmDialog({
   triggerLabel,
   triggerAriaLabel,

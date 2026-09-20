@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-// Uygulamanın ikon seti. Kitap glyph'i marka, kapak placeholder'ı ve boş
-// durumlarda ayrı ayrı kopyalanmıştı; hepsi buradan geliyor.
+// The application's icon set, so the book glyph used by the brand mark, the
+// cover placeholder and the empty states is defined once.
 
 function Icon({
   className = "size-5",
@@ -91,7 +91,7 @@ export function CheckIcon(props: IconProps) {
   );
 }
 
-// filled: dolu yıldız (puan), aksi hâlde yalnızca kontur.
+// filled: a solid star for a rating, otherwise outline only.
 export function StarIcon({
   filled = false,
   className = "size-5",
@@ -112,7 +112,7 @@ export function StarIcon({
   );
 }
 
-// Yatay üç nokta (⋯) — işlem menüsü.
+// Horizontal ellipsis (⋯) — the action menu trigger.
 export function MoreIcon(props: IconProps) {
   return (
     <Icon {...props}>

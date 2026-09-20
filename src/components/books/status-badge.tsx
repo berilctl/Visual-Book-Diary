@@ -4,8 +4,8 @@ import type { BookStatus } from "@/lib/books";
 import { useI18n } from "@/components/i18n-provider";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 
-// Durumlar artık renk taşıyor: okunan kitap markanın aksanıyla öne çıkar,
-// biten yeşille, okunacak yaldızla, pasif durumlar nötr kalır.
+// Statuses carry colour: a book being read takes the brand accent, finished
+// is green, to-read is gold, and the inactive statuses stay neutral.
 const STATUS_TONES: Record<BookStatus, BadgeTone> = {
   reading: "accent",
   completed: "success",

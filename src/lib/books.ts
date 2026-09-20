@@ -1,4 +1,4 @@
-// Kitap durumları — DB'deki CHECK constraint ile birebir aynı (PRD Bölüm 4).
+// Book statuses — kept in sync with the CHECK constraint on books.status.
 export const BOOK_STATUSES = [
   "reading",
   "completed",
@@ -9,7 +9,7 @@ export const BOOK_STATUSES = [
 
 export type BookStatus = (typeof BOOK_STATUSES)[number];
 
-// Durum etiketleri sözlükte: t.bookStatus[status].
+// Status labels live in the dictionary: t.bookStatus[status].
 
 export type Book = {
   id: string;
@@ -18,15 +18,15 @@ export type Book = {
   author: string;
   start_date: string | null;
   status: BookStatus;
-  // Migration 002 öncesi veritabanlarında sütun yok; o durumda undefined gelir.
+  // Missing on databases older than migration 002, hence optional.
   cover_url?: string | null;
-  // Migration 003: 1–5, yalnızca tamamlanan kitaplarda. finished_at 'YYYY-MM-DD'.
+  // Added in migration 003: rating is 1–5 and only set on finished books.
   rating?: number | null;
   finished_at?: string | null;
   created_at: string;
 };
 
-// "Bitirdim" butonunun göründüğü durumlar.
+// Statuses from which a book can be marked as finished.
 export const FINISHABLE_STATUSES: readonly BookStatus[] = ["reading", "paused"];
 
 export const RATING_MIN = 1;

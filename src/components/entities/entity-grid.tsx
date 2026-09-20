@@ -12,7 +12,8 @@ const EMPTY_ICONS: Record<EntityKind, typeof CharacterIcon> = {
   locations: LocationIcon,
 };
 
-// Karakter/mekan listesi: masonry (pure CSS columns) + ekleme + boş durum.
+// A list of characters or locations: masonry (pure CSS columns), the add
+// button and the empty state.
 export function EntityGrid({
   kind,
   bookId,
@@ -46,8 +47,8 @@ export function EntityGrid({
         <EntityFormDialog kind={kind} bookId={bookId} />
       </div>
 
-      {/* Pure CSS columns — sütun sütun (yukarıdan aşağı) dizer; bilinçli
-          tercih (PRD Bölüm 7). */}
+      {/* Pure CSS columns fill column by column (top to bottom), which is the
+          intended order here. */}
       <div className="gap-4 sm:columns-2 lg:columns-3">
         {items.map((entity) => (
           <EntityCard

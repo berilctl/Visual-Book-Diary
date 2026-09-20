@@ -1,5 +1,5 @@
-// İki/üç seçenekli mod anahtarı (giriş↔kayıt, dosya↔AI). Sekme değil, bir
-// durum anahtarı olduğu için role="tab" yerine aria-pressed kullanır.
+// A two- or three-way mode switch (sign in ↔ sign up). It is a state toggle
+// rather than a set of tabs, so it uses aria-pressed instead of role="tab".
 export function Segmented<T extends string>({
   options,
   value,

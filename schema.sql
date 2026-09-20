@@ -1,25 +1,25 @@
 -- ============================================================================
 -- Visual Book Diary — Database Schema
--- PRD Bölüm 4 (Schema) & Bölüm 5 (Triggers, RLS, Storage)
+-- Tables, indexes, triggers, row-level security and Storage in one file.
 --
--- Bu dosya tek parçadır ve Supabase SQL Editor'e olduğu gibi yapıştırılıp
--- çalıştırılabilir. Idempotent olacak şekilde yazılmıştır (tekrar çalıştırmak
--- güvenlidir): tablolar `if not exists`, policy/trigger'lar önce `drop` edilir.
+-- Paste the whole file into the Supabase SQL Editor and run it. It is written
+-- to be idempotent (running it again is safe): tables use `if not exists` and
+-- policies and triggers are dropped before they are created.
 --
--- Çalıştırma sırası: extension -> tablolar -> index'ler -> trigger -> RLS
--- politikaları -> Storage bucket & policy.
+-- Order: extension -> tables -> indexes -> trigger -> RLS policies ->
+-- Storage bucket and policies.
 -- ============================================================================
 
--- gen_random_uuid() için (Supabase'de genelde zaten yüklüdür).
+-- For gen_random_uuid() (usually already installed on Supabase).
 create extension if not exists pgcrypto;
 
 -- ============================================================================
--- 1. TABLOLAR (PRD Bölüm 4)
+-- 1. TABLES
 -- ============================================================================
 
 -- profiles --------------------------------------------------------------------
--- auth.users ile 1-1. Satır, kayıt anında handle_new_user trigger'ı tarafından
--- otomatik oluşturulur (bkz. Bölüm 5.1).
+-- One row per auth.users row, created automatically at sign-up by the
+-- handle_new_user trigger below.
 create table if not exists public.profiles (
   id          uuid        primary key references auth.users (id) on delete cascade,
   updated_at  timestamptz,
@@ -35,9 +35,9 @@ create table if not exists public.books (
   start_date  date,
   status      text        not null default 'reading'
                           check (status in ('reading', 'completed', 'want_to_read', 'paused', 'dnf')),
-  cover_url   text,                       -- kapak görseli, Supabase Storage public URL
-  rating      smallint    check (rating between 1 and 5),  -- yalnızca tamamlanan kitaplar
-  finished_at date,                       -- "Bitirdim" günü (kullanıcının yerel tarihi)
+  cover_url   text,                       -- cover image, a Supabase Storage public URL
+  rating      smallint    check (rating between 1 and 5),  -- finished books only
+  finished_at date,                       -- the day it was finished, in the user's local date
   created_at  timestamptz default now()
 );
 
@@ -48,7 +48,7 @@ create table if not exists public.characters (
   name        text        not null,
   description text,
   image_url   text,                       -- Supabase Storage public URL
-  tags        text[]      default '{}',   -- çoklu etiket
+  tags        text[]      default '{}',   -- multiple tags
   created_at  timestamptz default now()
 );
 
@@ -64,8 +64,8 @@ create table if not exists public.locations (
 );
 
 -- quotes ----------------------------------------------------------------------
--- Bir kitap silinince alıntı da silinir (CASCADE). Bir karakter silinince
--- alıntı KORUNUR, character_id boşaltılır (SET NULL) — PRD Bölüm 2.
+-- Deleting a book deletes its quotes (CASCADE). Deleting a character KEEPS the
+-- quote and only clears character_id (SET NULL).
 create table if not exists public.quotes (
   id              uuid        primary key default gen_random_uuid(),
   book_id         uuid        not null references public.books (id) on delete cascade,
@@ -76,7 +76,7 @@ create table if not exists public.quotes (
 );
 
 -- ============================================================================
--- 2. INDEX'LER (PRD Bölüm 4)
+-- 2. INDEXES
 -- ============================================================================
 
 create index if not exists books_user_id_idx        on public.books      (user_id);
@@ -86,10 +86,10 @@ create index if not exists quotes_book_id_idx        on public.quotes     (book_
 create index if not exists quotes_character_id_idx   on public.quotes     (character_id);
 
 -- ============================================================================
--- 3. TRIGGER: yeni kullanıcı için profil oluşturma (PRD Bölüm 5.1)
+-- 3. TRIGGER: create a profile for every new user
 -- ============================================================================
--- Supabase'de auth.users'a kayıt olunca public.profiles satırı otomatik
--- oluşmaz; bu trigger olmadan ilk kitap eklemede user_id FK hatası alınır.
+-- Supabase does not create a public.profiles row when someone signs up;
+-- without this trigger the first book insert fails on the user_id foreign key.
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -110,10 +110,10 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ============================================================================
--- 4. ROW LEVEL SECURITY (PRD Bölüm 5.2)
+-- 4. ROW LEVEL SECURITY
 -- ============================================================================
--- Tüm tablolarda RLS aktif. profiles ve books doğrudan sahiplik taşır;
--- characters/locations/quotes sahipliği books üzerinden join ile doğrulanır.
+-- RLS is enabled on every table. profiles and books carry ownership directly;
+-- characters, locations and quotes resolve it through their book.
 
 alter table public.profiles   enable row level security;
 alter table public.books      enable row level security;
@@ -134,8 +134,8 @@ create policy "own books" on public.books for all
   with check (user_id = auth.uid());
 
 -- characters ------------------------------------------------------------------
--- user_id yok; sahiplik book_id -> books.user_id join ile doğrulanır.
--- INSERT'in çalışması için hem using hem with check gerekir.
+-- No user_id column; ownership resolves through book_id -> books.user_id.
+-- Both using and with check are needed for INSERT to work.
 drop policy if exists "own characters" on public.characters;
 create policy "own characters" on public.characters for all
   using (exists (
@@ -178,17 +178,17 @@ create policy "own quotes" on public.quotes for all
   ));
 
 -- ============================================================================
--- 5. STORAGE: bucket + policy (PRD Bölüm 5.3)
+-- 5. STORAGE: bucket and policies
 -- ============================================================================
 -- Bucket: book-images (public read, authenticated write).
--- Yol konvansiyonu: {user_id}/{book_id}/{uuid}.png
--- Tablo RLS'i Storage'ı korumaz; storage.objects için ayrı policy gerekir.
+-- Path convention: {user_id}/{book_id}/{uuid}.png
+-- Table RLS does not cover Storage; storage.objects needs its own policies.
 
 insert into storage.buckets (id, name, public)
 values ('book-images', 'book-images', true)
 on conflict (id) do nothing;
 
--- Yazma: kullanıcı yalnızca kendi {user_id}/ klasörüne yükleyebilir.
+-- Writing: a user may only upload into their own {user_id}/ folder.
 drop policy if exists "own folder upload" on storage.objects;
 create policy "own folder upload" on storage.objects for insert
   to authenticated
@@ -197,7 +197,7 @@ create policy "own folder upload" on storage.objects for insert
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- Güncelleme/silme: yalnızca kendi klasöründeki objeler üzerinde.
+-- Updating and deleting: only objects inside their own folder.
 drop policy if exists "own folder update" on storage.objects;
 create policy "own folder update" on storage.objects for update
   to authenticated
@@ -214,25 +214,25 @@ create policy "own folder delete" on storage.objects for delete
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- Okuma: bucket public olduğu için herkese açık SELECT (PRD Bölüm 5.3).
+-- Reading: the bucket is public, so SELECT is open to everyone.
 drop policy if exists "public read book-images" on storage.objects;
 create policy "public read book-images" on storage.objects for select
   to public
   using (bucket_id = 'book-images');
 
 -- ============================================================================
--- 6. KULLANICI ADIYLA GİRİŞ
+-- 6. SIGNING IN WITH A USERNAME
 -- ============================================================================
--- Kullanıcı adı büyük/küçük harf duyarsız benzersizdir; girişte kullanıcı
--- adından hesap bulunabilmesi için şart. NULL'lar çakışmaz (kullanıcı adı
--- olmayan eski hesaplar yalnızca e-postayla giriş yapar).
+-- Usernames are unique case-insensitively, which is what makes it possible to
+-- resolve one to an account at sign-in. NULLs do not collide (older accounts
+-- without a username sign in by email only).
 create unique index if not exists profiles_username_lower_key
   on public.profiles (lower(username));
 
--- Kullanıcı adından hesap kimliği (e-posta DEĞİL). Yalnızca service_role
--- çalıştırabilir: anon/authenticated'a açık olsaydı PostgREST üzerinden
--- herkes çağırabilirdi. service_role RLS'i zaten aştığı için security
--- definer gerekmiyor.
+-- Username -> account id (NOT the email address). Only service_role may
+-- execute it: granted to anon or authenticated, anyone could call it through
+-- PostgREST. service_role already bypasses RLS, so security definer is not
+-- needed.
 create or replace function public.user_id_for_username(p_username text)
 returns uuid
 language sql

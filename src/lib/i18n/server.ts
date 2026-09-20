@@ -3,14 +3,13 @@ import { cookies, headers } from "next/headers";
 import { LOCALE_COOKIE, isLocale, matchLocale, type Locale } from "./config";
 import { dictionaries, type Dictionary } from "./dictionaries";
 
-// Server Component, Server Action ve Route Handler'larda geçerli dil.
-// Öncelik: kullanıcının seçtiği dil (çerez) -> tarayıcı dili
-// (Accept-Language) -> varsayılan (tr).
+// The active locale in Server Components, Server Actions and Route Handlers.
+// Precedence: the language the user picked (cookie) -> the browser's language
+// (Accept-Language) -> the default (tr).
 //
-// Not: cookies()/headers() okumak, bu fonksiyonu çağıran sayfaları dinamik
-// render'a geçirir (Next 16 dokümanı). Uygulamanın giriş sonrası sayfaları
-// zaten oturum çerezi yüzünden dinamik; yalnızca landing statikten dinamiğe
-// geçiyor.
+// Note: reading cookies()/headers() opts callers into dynamic rendering. Pages
+// behind the session cookie are dynamic anyway; only the landing page moves
+// from static to dynamic because of this.
 export async function getLocale(): Promise<Locale> {
   const cookieStore = await cookies();
   const chosen = cookieStore.get(LOCALE_COOKIE)?.value;

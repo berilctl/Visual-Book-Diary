@@ -8,9 +8,9 @@ type I18n = { locale: Locale; intlLocale: string; t: Dictionary };
 
 const I18nContext = createContext<I18n | null>(null);
 
-// Sunucudan yalnızca dil kodu gelir; sözlük istemcide seçilir. Sözlükte
-// fonksiyonlar var (çoğul, isimli metinler) ve fonksiyonlar Server ->
-// Client prop olarak aktarılamaz.
+// Only the locale code comes from the server; the dictionary is picked on the
+// client. The dictionary holds functions (plurals, strings with names), and
+// functions cannot be passed from a Server to a Client Component as props.
 export function I18nProvider({
   locale,
   children,

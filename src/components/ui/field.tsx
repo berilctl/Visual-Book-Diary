@@ -5,17 +5,17 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
-// Form kontrollerinin ortak görünümü. Daha önce bu string 10 dosyada
-// birebir kopyalıydı.
-// Not: odak halkasını iptal eden utility bilerek kaldırıldı. Tailwind
-// utility'leri base katmanını ezdiği için globals.css'teki :focus-visible
-// halkasını yok ediyordu; kenarlık rengiyle birlikte halka da görünmeli.
+// Shared appearance for form controls.
+// Note: the utility that cancels the focus ring was removed deliberately.
+// Tailwind utilities override the base layer, so it wiped out the
+// :focus-visible ring from globals.css; the ring has to show alongside the
+// border colour.
 export const controlClass =
   "w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm " +
   "text-ink placeholder:text-ink-subtle transition " +
   "focus:border-accent disabled:opacity-50";
 
-// Etiket + kontrol + opsiyonel ipucu sarmalayıcısı.
+// Label plus control plus an optional hint.
 export function Field({
   label,
   required,

@@ -1,7 +1,7 @@
 import { BookIcon } from "@/components/ui/icons";
 
-// Marka işareti. Tek yerde tanımlı; landing'de tam hâli, panel başlıklarında
-// kompakt hâli kullanılır.
+// The brand mark: full version on the landing page, compact version in the
+// application header.
 
 export function BrandIcon({ className = "size-10" }: { className?: string }) {
   return (

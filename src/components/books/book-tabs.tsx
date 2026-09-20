@@ -32,8 +32,8 @@ export function BookTabs({
   const tabLabel = (key: TabKey) =>
     key === "quotes" ? t.quotes.tab : t.entityKinds[key].tab;
 
-  // Roving tabindex: şeride tek Tab durağı düşer, sekmeler arası geçiş ok
-  // tuşlarıyla yapılır (WAI-ARIA tabs deseni).
+  // Roving tabindex: the strip takes a single Tab stop and the arrow keys move
+  // between tabs (the WAI-ARIA tabs pattern).
   const tabRefs = useRef<Partial<Record<TabKey, HTMLButtonElement | null>>>({});
 
   function handleTabKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -60,10 +60,10 @@ export function BookTabs({
 
   return (
     <div>
-      {/* Ayırıcı çizgi border yerine inset gölge: overflow-x-auto (dar
-          ekranlarda sekmeler kaydırılabilsin diye) overflow-y'yi de auto
-          yapıyor ve -mb-px numarasının yarattığı 1px taşma sekme şeridinde
-          dikey kaydırma çubuğu gösteriyordu. */}
+      {/* The divider is an inset shadow rather than a border: overflow-x-auto
+          (so the tabs can scroll on narrow screens) also makes overflow-y auto,
+          and the 1px bleed from the -mb-px trick was enough to show a vertical
+          scrollbar in the tab strip. */}
       <div
         role="tablist"
         aria-label={t.book.tabsLabel}
@@ -108,7 +108,7 @@ export function BookTabs({
         })}
       </div>
 
-      {/* Her sekmenin kendi paneli var; aria-labelledby ile başlığına bağlı. */}
+      {/* Each tab has its own panel, linked to its tab with aria-labelledby. */}
       <div className="py-8">
         {TABS.map((tab) => (
           <div

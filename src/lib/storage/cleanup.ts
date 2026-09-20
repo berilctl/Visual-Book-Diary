@@ -4,15 +4,15 @@ import { BOOK_IMAGES_BUCKET } from "./url";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-// Artık hiçbir satırın göstermediği görselleri Storage'dan siler.
+// Removes images from Storage once no row references them.
 //
-// - Kullanıcının oturumlu istemcisiyle çalışır: Storage'daki "own folder
-//   delete" politikası yalnızca kendi klasöründeki dosyaların silinmesine izin
-//   verir (yollar ayrıca ownImagePath ile doğrulanmış olarak gelir).
-// - En iyi çaba: temizlik başarısız olursa kullanıcının asıl işlemi (kaydetme,
-//   silme) bozulmaz; yalnızca sunucu loguna yazılır, dosya sahipsiz kalır.
-// - Çağıranlar bunu veritabanı işlemi BAŞARILI olduktan sonra çağırır; aksi
-//   hâlde satır silinmiş bir dosyayı gösterebilir.
+// - Runs with the user's authenticated client: the "own folder delete" Storage
+//   policy only allows files inside their own folder (callers also validate the
+//   paths with ownImagePath first).
+// - Best effort: if cleanup fails, the user's actual operation (save, delete)
+//   still succeeds; the failure is logged and the file is left orphaned.
+// - Callers invoke this only AFTER the database write succeeded, otherwise a
+//   surviving row could point at a deleted file.
 export async function removeImages(
   supabase: Supabase,
   paths: (string | null | undefined)[],
@@ -30,10 +30,10 @@ export async function removeImages(
 
 const PAGE_SIZE = 100;
 
-// Kitap silindiğinde {userId}/{bookId}/ klasörünün tamamı (kapak + karakter ve
-// mekan görselleri) sahipsiz kalır: veritabanı satırları CASCADE ile gider ama
-// Storage dosyaları gitmez. Önce tüm sayfalar listelenir, sonra silinir
-// (listelerken silmek offset'i kaydırıp dosya atlatırdı).
+// Deleting a book orphans its whole {userId}/{bookId}/ folder (cover plus
+// character and location images): the rows go away through CASCADE, the files
+// do not. Every page is listed before anything is removed — deleting while
+// listing would shift the offset and skip files.
 export async function removeBookFolder(
   supabase: Supabase,
   userId: string,
@@ -50,7 +50,7 @@ export async function removeBookFolder(
       console.error("[storage-cleanup] list failed:", error.message, folder);
       break;
     }
-    // id'si null olanlar klasör kaydı; yalnızca dosyalar silinir.
+    // Entries without an id are folder records; only files are removed.
     for (const item of data) {
       if (item.id) paths.push(`${folder}/${item.name}`);
     }

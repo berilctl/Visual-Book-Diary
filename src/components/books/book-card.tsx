@@ -14,7 +14,7 @@ import { BookProgress } from "./book-progress";
 import { DeleteBookButton } from "./delete-book-button";
 import { StatusBadge } from "./status-badge";
 
-// Kartta gösterilecek içerik sayıları.
+// Counts of the content shown on the card.
 export type BookSummary = {
   characters: number;
   locations: number;
@@ -23,10 +23,10 @@ export type BookSummary = {
 
 const EMPTY_SUMMARY: BookSummary = { characters: 0, locations: 0, quotes: 0 };
 
-// Dikey, kapak odaklı kart — kitaplık bir raf gibi görünsün.
-// Client Component: seçili dile göre tarih biçimi ve çoğul sayılar
-// sözlükteki fonksiyonlarla üretiliyor (fonksiyonlar sunucudan prop olarak
-// aktarılamaz).
+// A tall, cover-first card, so the library reads like a shelf.
+// A Client Component: date formats and pluralised counts for the active
+// language come from functions in the dictionary, and functions cannot be
+// passed down from the server as props.
 export function BookCard({
   book,
   summary = EMPTY_SUMMARY,
@@ -36,8 +36,8 @@ export function BookCard({
 }) {
   const { t, intlLocale } = useI18n();
   const started = formatDate(book.start_date, intlLocale);
-  // Pencereler menünün içinde değil burada: menü seçimden sonra kapanır,
-  // içindeki pencere de onunla birlikte kaybolurdu.
+  // The dialogs live here rather than inside the menu: the menu closes after a
+  // selection, and a dialog inside it would disappear along with it.
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -48,13 +48,14 @@ export function BookCard({
   ].filter(Boolean);
 
   return (
-    // overflow-hidden kartta değil kapakta: ⋯ menüsü kartın dışına taşabilsin
-    // (kırpılmasın), kapağın köşeleri yine kartın yuvarlak kenarına uysun.
+    // overflow-hidden sits on the cover, not the card, so the ⋯ menu can
+    // overflow the card without being clipped while the cover still follows
+    // the card's rounded corners.
     <article
       className={`group relative flex flex-col transition hover:shadow-lift ${cardClass}`}
     >
-      {/* Kapak linki klavye sırasından çıkarıldı: aynı hedefe giden başlık
-          linki zaten var, kapak dekoratif (alt=""). */}
+      {/* The cover link is out of the keyboard order: the title link goes to the
+          same place and the cover is decorative (alt=""). */}
       <Link
         href={`/books/${book.id}`}
         tabIndex={-1}
@@ -90,15 +91,15 @@ export function BookCard({
           </p>
         </Link>
 
-        {/* Linkin DIŞINDA: link içinde buton geçersiz HTML olurdu ve tıklama
-            sayfaya giderdi. */}
+        {/* OUTSIDE the link: a button inside a link would be invalid HTML and a
+            click would navigate. */}
         <div className="mt-3 flex flex-col gap-1.5 empty:hidden">
           <BookProgress book={book} variant="card" />
         </div>
 
       </div>
 
-      {/* Linkin dışında (link içinde buton geçersiz HTML), kapağın köşesinde. */}
+      {/* Outside the link (a button inside one is invalid HTML), in the cover's corner. */}
       <div className="absolute right-2 top-2">
         <ActionMenu
           label={t.common.moreActions(book.title)}

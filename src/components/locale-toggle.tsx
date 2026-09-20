@@ -4,9 +4,9 @@ import { setLocale } from "@/app/actions/locale";
 import { useI18n } from "@/components/i18n-provider";
 import { LOCALES } from "@/lib/i18n/config";
 
-// TR | EN anahtarı. Her dil ayrı bir submit butonu; seçili olan aria-pressed.
-// Butonların `lang` özelliği ekran okuyucunun dil adını doğru telaffuz
-// etmesini sağlar ("English" Türkçe sesle okunmaz).
+// TR | EN switch. Each language is its own submit button, and the active one
+// carries aria-pressed. The `lang` attribute makes screen readers pronounce
+// the language names correctly.
 export function LocaleToggle() {
   const { locale, t } = useI18n();
 

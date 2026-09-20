@@ -2,10 +2,10 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { BOOK_IMAGES_BUCKET as BUCKET } from "./url";
 
-// Tüm görsel yüklemeleri bu tek fonksiyondan geçer (PRD Bölüm 6.1).
+// Every image upload in the app goes through this single function.
 
-// İçerik tipinden dosya uzantısı. Yüklenen dosya png/jpeg/webp olabileceğinden
-// gerçek tipi koruyup doğru uzantıyı seçiyoruz.
+// File extension from the content type, so png/jpeg/webp uploads keep their
+// real format.
 const EXT_BY_TYPE: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
@@ -13,13 +13,13 @@ const EXT_BY_TYPE: Record<string, string> = {
 };
 
 /**
- * Görsel byte'larını Storage'a `{userId}/{bookId}/{uuid}.{ext}` yoluna yazar
- * ve kalıcı public URL döner.
+ * Writes image bytes to `{userId}/{bookId}/{uuid}.{ext}` in Storage and
+ * returns a permanent public URL.
  *
- * `userId` çağıran route'ta server-side `auth.getUser()`'dan gelmelidir —
- * asla client'tan alınmaz. Yükleme kullanıcının oturumlu (cookie) Supabase
- * istemcisiyle yapılır; böylece Storage RLS "own folder upload" politikası
- * yolun ilk segmentini auth.uid() ile doğrular (PRD Bölüm 5.3).
+ * `userId` must come from a server-side `auth.getUser()` in the calling route,
+ * never from the client. The upload runs through the user's cookie-backed
+ * Supabase client so that the "own folder upload" Storage policy can check the
+ * first path segment against auth.uid().
  */
 export async function uploadImage(
   bytes: Buffer,

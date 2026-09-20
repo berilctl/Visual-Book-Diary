@@ -13,10 +13,11 @@ import { BookCard, type BookSummary } from "./book-card";
 
 type Filter = BookStatus | "all";
 
-// Filtre durumu URL'de: ?status=reading&q=dan — sayfa yenilenince ya da
-// detaydan geri dönünce korunur. window.history.replaceState Next router'ıyla
-// entegre (useSearchParams güncellenir) ve sunucuya istek atmaz; aramada her
-// tuş vuruşunda sayfanın sunucuda yeniden çizilmesi istenmez.
+// The filter state lives in the URL: ?status=reading&q=dan survives a refresh
+// and coming back from a detail page. window.history.replaceState is
+// integrated with the Next router (useSearchParams updates) and sends no
+// request, which is what search needs — re-rendering the page on the server on
+// every keystroke is not.
 function writeParams(changes: Record<string, string | null>) {
   const params = new URLSearchParams(window.location.search);
   for (const [key, value] of Object.entries(changes)) {
@@ -31,13 +32,13 @@ function writeParams(changes: Record<string, string | null>) {
   );
 }
 
-// Kitaplık: durum filtresi + arama + kart ızgarası.
+// The library: status filter, search and the card grid.
 //
-// Filtreye uymayan kartlar KALDIRILMAZ, gizlenir: "Okunuyor" filtresindeyken
-// "Bitirdim"e basılınca kitap tamamlandıya geçer; kart kaldırılsaydı içindeki
-// bileşenler (açılmak üzere olan puan penceresi) de yok olurdu. Pencereler
-// document.body'ye portal ile çizildiği için gizli kartın içinden açılsa da
-// görünür.
+// Cards that do not match the filter are HIDDEN rather than removed: with the
+// "Reading" filter active, finishing a book moves it to "completed", and
+// removing the card would take the components inside it with it — including
+// the rating dialog that is about to open. Dialogs are portalled into
+// document.body, so they stay visible even when opened from a hidden card.
 export function Library({
   books,
   summaries,
@@ -48,8 +49,8 @@ export function Library({
   const { t } = useI18n();
   const searchParams = useSearchParams();
 
-  // Arama kutusu yerel durumdan sürülür: değeri URL'den okumak, hızlı yazarken
-  // router güncellemesi eşzamansız olduğu için imleç kaymasına yol açabilirdi.
+  // The search box is driven by local state: reading its value from the URL
+  // could move the caret while typing fast, because the router update is async.
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
 
   const counts = new Map<BookStatus, number>();
@@ -62,9 +63,9 @@ export function Library({
     }
   }
 
-  // Yalnızca kitabı olan durumların sekmesi (beş durum + "Tümü" dar ekranda
-  // kalabalık). URL'deki durumun kitabı kalmadıysa (ör. son okunan kitap
-  // bitirildi) "Tümü"ne düşülür.
+  // Only statuses that actually have books get a tab (five statuses plus
+  // "All" is crowded on a narrow screen). If the status in the URL has no books
+  // left — the last book being read was finished, say — it falls back to "All".
   const statusParam = searchParams.get("status");
   const filters: Filter[] = [
     "all",
@@ -102,8 +103,8 @@ export function Library({
         <div
           role="group"
           aria-label={t.library.filterLabel}
-          // Dar ekranda yatay kaydırılır. Kaydırma çubuğu gizli: kenarda kesilen
-          // son buton kaydırılabildiğini zaten gösteriyor.
+          // Scrolls horizontally on narrow screens. The scrollbar is hidden:
+          // the last button being cut off already signals that there is more.
           className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {filters.map((filter) => {
@@ -147,7 +148,7 @@ export function Library({
         </label>
       </div>
 
-      {/* Ekran okuyucuya sonuç sayısı; görsel olarak yalnızca filtre varken. */}
+      {/* The result count for screen readers; visible only while a filter is active. */}
       <p
         aria-live="polite"
         className={filtering ? "mb-4 text-sm text-ink-subtle" : "sr-only"}
@@ -174,8 +175,8 @@ export function Library({
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
         {books.map((book) => (
-          // display:contents sarmalayıcı ızgarayı bozmaz; hidden görünmez yapar
-          // ama bileşeni bağlı tutar (yukarıdaki açıklama).
+          // display:contents keeps the wrapper from breaking the grid, and
+          // hidden makes it invisible while keeping the component mounted.
           <div key={book.id} hidden={!isVisible(book)} className="contents">
             <BookCard book={book} summary={summaries[book.id]} />
           </div>

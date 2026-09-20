@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/icons";
 import { getDictionary } from "@/lib/i18n/server";
 
-// Landing + Login/Register (PRD Bölüm 7).
-// Giriş yapmış kullanıcı buraya gelirse proxy onu /dashboard'a yönlendirir.
+// Landing page with the sign-in / sign-up form.
+// Signed-in visitors are redirected to /dashboard by the proxy.
 
 export default async function Home() {
   const t = await getDictionary();
@@ -22,14 +22,14 @@ export default async function Home() {
 
   return (
     <main className="relative flex flex-1 items-center justify-center px-6 py-16">
-      {/* Giriş yapmadan önce de dil ve tema seçilebilsin — landing'de üst bar yok. */}
+      {/* Language and theme are reachable before signing in — the landing page has no header. */}
       <div className="absolute right-4 top-4 flex items-center gap-2 sm:right-6">
         <LocaleToggle />
         <ThemeToggle />
       </div>
 
-      {/* Yerleşim: mobilde hero -> giriş kartı -> özellikler (kart ekranın hemen
-          altında kalsın diye). lg'de kart sağ sütunda iki satırı kaplar. */}
+      {/* Layout: on mobile hero -> auth card -> features, so the card stays near
+          the top of the screen. On lg the card spans two rows in the right column. */}
       <div className="grid w-full max-w-5xl gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-20">
         <section className="max-w-xl lg:col-start-1 lg:row-start-1">
           <BrandMark />

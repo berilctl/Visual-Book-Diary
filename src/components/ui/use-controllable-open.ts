@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-// Pencerelerin açık/kapalı durumu için ortak mantık.
-// - open verilmezse bileşen kendi durumunu tutar (kendi tetikleyici butonuyla).
-// - open verilirse durum dışarıdan yönetilir: ör. ⋯ menüsü pencereyi açar.
-//   Menü seçimden sonra kapandığı için pencere menünün İÇİNDE yaşayamaz;
-//   kart seviyesinde durur ve buradan kontrol edilir.
+// Shared open/closed state for dialogs.
+// - Without `open` the component keeps its own state and renders its trigger.
+// - With `open` the state is controlled from the outside, e.g. by the ⋯ menu.
+//   Since the menu unmounts after a selection, the dialog cannot live INSIDE
+//   it; it sits at card level and is controlled from there.
 export function useControllableOpen(
   open?: boolean,
   onOpenChange?: (open: boolean) => void,

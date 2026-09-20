@@ -1,5 +1,5 @@
-// Görsel yükleme kuralları. Upload rotası (sunucu) ve formlardaki ön kontrol
-// (istemci) aynı kaynaktan beslenir — server-only değil.
+// Image upload rules, shared by the upload route (server) and the forms
+// (client) — not server-only.
 export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 export const IMAGE_ACCEPT = IMAGE_TYPES.join(",");
 export const IMAGE_MAX_MB = 5;
@@ -7,8 +7,8 @@ export const IMAGE_MAX_BYTES = IMAGE_MAX_MB * 1024 * 1024;
 
 export type ImageFileProblem = "type" | "empty" | "size";
 
-// Sunucudaki kontrolün aynısı; yalnızca kullanıcıya erken geri bildirim için.
-// Asıl yetki sunucuda (upload rotası) — bu fonksiyon güvenlik sınırı değil.
+// Mirrors the server-side check; used purely for early feedback in forms.
+// The upload route is the security boundary, not this function.
 export function imageFileProblem(file: File): ImageFileProblem | null {
   if (!(IMAGE_TYPES as readonly string[]).includes(file.type)) return "type";
   if (file.size === 0) return "empty";

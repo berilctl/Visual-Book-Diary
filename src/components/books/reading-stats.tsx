@@ -4,13 +4,14 @@ import type { Book } from "@/lib/books";
 import { useI18n } from "@/components/i18n-provider";
 import { CheckIcon, StarIcon } from "@/components/ui/icons";
 
-// Kitaplık başlığı altındaki okuma istatistiği: bu yıl bitirilen kitaplar,
-// onların ortalama puanı ve bitiş tarihi eksik tamamlanmış kitap uyarısı.
+// Reading stats under the library title: books finished this year, their
+// average rating, and a note about finished books with no finish date.
 //
-// "Bu yıl" kullanıcının YEREL takvimiyle hesaplanır (istemci bileşeni);
-// sunucu UTC olduğu için yılbaşı gecesinin ilk saatlerinde önceki yılı
-// gösterirdi. Sunucu ile tarayıcının yılı yalnızca o birkaç saatte farklı
-// olabileceğinden yıla bağlı metinlerde hydration uyarısı bilerek susturulur.
+// "This year" follows the user's LOCAL calendar (hence a client component):
+// the server runs in UTC and would show the previous year during the first
+// hours of New Year's Day. Since the server's year and the browser's can only
+// differ in those few hours, the hydration warning is silenced deliberately
+// for the year-dependent strings.
 export function ReadingStats({ books }: { books: Book[] }) {
   const { t, intlLocale } = useI18n();
   const year = new Date().getFullYear();
@@ -29,8 +30,8 @@ export function ReadingStats({ books }: { books: Book[] }) {
           maximumFractionDigits: 1,
         }).format(ratings.reduce((sum, r) => sum + r, 0) / ratings.length)
       : null;
-  // Bitiş tarihi olmayan tamamlanmış kitaplar sayılamaz; sessizce dışarıda
-  // kalmasınlar, kullanıcı düzenleme formundan tarih ekleyebilir.
+  // Finished books without a finish date cannot be counted. Rather than drop
+  // them silently, the user is told they can add the date from the edit form.
   const missingDates = completed.filter((book) => !book.finished_at).length;
 
   return (

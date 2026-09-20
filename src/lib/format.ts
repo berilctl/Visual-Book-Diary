@@ -1,8 +1,7 @@
-// 'YYYY-MM-DD' tarihini seçili dilde biçimlendirir. Kitap kartı ve detay
-// sayfasında aynı fonksiyon ayrı ayrı kopyalanmıştı.
+// Formats a 'YYYY-MM-DD' date in the active locale.
 export function formatDate(value: string | null, intlLocale: string) {
   if (!value) return null;
-  // Yerel saat dilimi kaymasını önlemek için gün başı olarak işle.
+  // Parse as local midnight so the date never shifts a day by timezone.
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return null;
   return new Intl.DateTimeFormat(intlLocale, { dateStyle: "medium" }).format(
@@ -10,8 +9,8 @@ export function formatDate(value: string | null, intlLocale: string) {
   );
 }
 
-// Kullanıcının YEREL günü, 'YYYY-MM-DD'. toISOString() UTC günü verir;
-// Türkiye'de (UTC+3) gece yarısından sonraki 3 saat bir önceki güne düşerdi.
+// The user's LOCAL day as 'YYYY-MM-DD'. toISOString() would give the UTC day,
+// which is still yesterday for the first hours after midnight in UTC+3.
 export function localISODate(date = new Date()) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");

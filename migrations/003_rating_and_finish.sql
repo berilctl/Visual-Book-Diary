@@ -1,20 +1,20 @@
 -- ============================================================================
--- 003 — Puan ve bitiş tarihi
+-- 003 — Rating and finish date
 -- ============================================================================
--- Mevcut bir Supabase veritabanına uygulamak için: SQL Editor'e yapıştır ve
--- Run. Yeni kurulumlarda gerekmez; schema.sql'deki books tablosu bu sütunları
--- zaten içeriyor. Tekrar çalıştırmak güvenli (idempotent).
+-- To apply this to an existing Supabase database: paste it into the SQL Editor
+-- and run it. New installations do not need it; the books table in schema.sql
+-- already has the columns. Running it again is safe (idempotent).
 --
--- Yeni RLS politikası gerekmiyor: "own books" politikası tüm işlemleri kapsıyor.
+-- No new RLS policy is needed: the "own books" policy covers every operation.
 -- ============================================================================
 
--- 1–5 yıldız. NULL = puan verilmedi. Aralık veritabanında da zorunlu.
+-- 1–5 stars. NULL means unrated. The range is enforced in the database too.
 alter table public.books
   add column if not exists rating smallint check (rating between 1 and 5);
 
--- "Bitirdim"e basılan gün (kullanıcının yerel tarihi). Okuma istatistiği bunu kullanır.
+-- The day the book was marked as finished, in the user's local date. The reading stats use it.
 alter table public.books
   add column if not exists finished_at date;
 
--- PostgREST'in yeni sütunları hemen görmesi için şema önbelleğini tazele.
+-- Refresh the schema cache so PostgREST picks the new columns up right away.
 notify pgrst, 'reload schema';

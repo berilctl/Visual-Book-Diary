@@ -1,11 +1,11 @@
-// Dil ayarları. İstemci ve sunucu ortak kullanır (server-only değil).
+// Locale configuration, shared by client and server (not server-only).
 export const LOCALES = ["tr", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "tr";
 export const LOCALE_COOKIE = "locale";
 
-// Intl API'leri (tarih biçimi, büyük harf dönüşümü) için bölge etiketi.
+// Region tag for the Intl APIs (date formatting, case conversion).
 export const INTL_LOCALE: Record<Locale, string> = {
   tr: "tr-TR",
   en: "en-US",
@@ -17,8 +17,8 @@ export function isLocale(value: unknown): value is Locale {
   );
 }
 
-// Accept-Language başlığından desteklenen ilk dili seçer (q ağırlığına göre).
-// Örn. "en-GB,en;q=0.9,tr;q=0.8" -> "en". Eşleşme yoksa varsayılan.
+// Picks the first supported language from an Accept-Language header, honouring
+// q-weights: "en-GB,en;q=0.9,tr;q=0.8" -> "en". Falls back to the default.
 export function matchLocale(acceptLanguage: string | null): Locale {
   if (!acceptLanguage) return DEFAULT_LOCALE;
 

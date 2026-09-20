@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-// Tüm "henüz X yok" durumları için tutarlı, davetkâr boş durum.
-// icon opsiyonel: verilirse yumuşak aksan zeminli bir daire içinde gösterilir.
+// Consistent empty state for every "nothing here yet" case.
+// The icon is optional; when given it sits in a circle of soft accent colour.
 export function EmptyState({
   title,
   hint,

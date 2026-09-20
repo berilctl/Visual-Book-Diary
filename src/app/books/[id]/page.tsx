@@ -13,8 +13,8 @@ import { formatDate } from "@/lib/format";
 import { INTL_LOCALE } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 
-// /books/[id] — Kitap detay sayfası + 3 sekme (PRD Bölüm 7).
-// Next 16: params bir Promise'tir, await edilmelidir.
+// Book detail page with the character, location and quote tabs.
+// Next 16: params is a Promise and has to be awaited.
 export default async function BookDetailPage({
   params,
 }: {
@@ -28,8 +28,8 @@ export default async function BookDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
-  // RLS yalnızca kullanıcının kendi kitabını döndürür; başkasının ya da
-  // olmayan kitapta 0 satır -> null -> 404.
+// Row-level security only returns the user's own book; someone else's book or
+// a missing id yields 0 rows -> null -> 404.
   const { data: book } = await supabase
     .from("books")
     .select("*")
@@ -38,8 +38,8 @@ export default async function BookDetailPage({
 
   if (!book) notFound();
 
-  // Karakter, mekan ve alıntıları paralel çek (RLS yalnızca kullanıcının
-  // verisini döner).
+// Characters, locations and quotes in parallel (again scoped to the user by
+// row-level security).
   const [{ data: characters }, { data: locations }, { data: quotes }] =
     await Promise.all([
       supabase
@@ -66,8 +66,8 @@ export default async function BookDetailPage({
     <main className="flex flex-1 flex-col">
       <AppHeader />
 
-      {/* Kitap künyesi. İçerik bölümüyle aynı max-w-5xl kabında; daha önce
-          sayfa kenarına yaslanıp alttaki içerikle hizasız duruyordu. */}
+      {/* Book header, in the same max-w-5xl container as the content below so
+          the two line up. */}
       <div className="border-b border-line">
         <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
           <Link

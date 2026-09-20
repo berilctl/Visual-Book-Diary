@@ -6,9 +6,9 @@ import { getDictionary } from "@/lib/i18n/server";
 
 export type QuoteFormState = { ok?: boolean; error?: string } | undefined;
 
-// Alıntı ekle. content zorunlu; character_id opsiyoneldir (null olabilir).
-// character_id verilirse o karakterin BU kitaba ait olduğu doğrulanır —
-// başka kitabın karakterine bağlanamaz. user_id server-side; RLS devrede.
+// Adds a quote. content is required; character_id is optional and may be null.
+// When it is given, the character is checked to belong to THIS book, so a quote
+// cannot be linked to another book's character. user_id comes from the session.
 export async function createQuote(
   _prev: QuoteFormState,
   formData: FormData,
@@ -25,7 +25,7 @@ export async function createQuote(
   if (!bookId) return { error: t.errors.bookIdMissing };
   if (!content) return { error: t.quotes.contentRequired };
 
-  // book_id sahipliği. RLS de korur; burada net hata dönüyoruz.
+  // Ownership of book_id. RLS covers this too; here it gives a clear error.
   const { data: book } = await supabase
     .from("books")
     .select("id")
@@ -40,7 +40,7 @@ export async function createQuote(
   const characterId =
     String(formData.get("character_id") ?? "").trim() || null;
 
-  // character_id verildiyse, karakterin bu kitaba ait olduğunu doğrula.
+  // When character_id is given, verify the character belongs to this book.
   if (characterId) {
     const { data: character } = await supabase
       .from("characters")
@@ -65,7 +65,7 @@ export async function createQuote(
   return { ok: true };
 }
 
-// Alıntı sil. RLS sahipliği zorunlu kılar.
+// Deletes a quote. Row-level security enforces ownership.
 export async function deleteQuote(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {

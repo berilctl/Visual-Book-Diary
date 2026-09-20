@@ -20,7 +20,7 @@ export function AuthForm() {
   const [mode, setMode] = useState<Mode>("login");
   const usernameHint = t.auth.usernameHint(USERNAME_MIN, USERNAME_MAX);
 
-  // Her mod kendi action state'ini tutar.
+  // Each mode keeps its own action state.
   const [loginState, loginAction, loginPending] = useActionState<
     AuthState,
     FormData
@@ -46,16 +46,16 @@ export function AuthForm() {
         ]}
       />
 
-      {/* key={mode} formu mod değişince sıfırlar. */}
+      {/* key={mode} resets the form when the mode changes. */}
       <form
         key={mode}
         action={isLogin ? loginAction : registerAction}
         className="flex flex-col gap-4"
       >
         {isLogin ? (
-          // Tek alan: "@" içeriyorsa e-posta, içermiyorsa kullanıcı adı.
-          // type="text" şart — type="email" kullanıcı adını tarayıcıda
-          // gönderilmeden reddediyordu.
+          // One field: an "@" means email, anything else a username.
+          // type="text" is required — type="email" made the browser reject a
+          // username before the form was ever submitted.
           <Field label={t.auth.identifier} required>
             <Input
               name="identifier"

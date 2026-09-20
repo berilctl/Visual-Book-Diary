@@ -10,8 +10,7 @@ import { BookIcon } from "@/components/ui/icons";
 import type { Book } from "@/lib/books";
 import { getDictionary } from "@/lib/i18n/server";
 
-// /dashboard — kullanıcının kitaplığı (PRD Bölüm 7). RLS sayesinde yalnızca
-// kendi kitapları döner.
+// The user's library. Row-level security scopes every query to their own rows.
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -28,10 +27,10 @@ export default async function DashboardPage() {
   const t = await getDictionary();
   const displayName = profile?.username ?? user.email ?? t.dashboard.fallbackName;
 
-  // Kitaplar + kart sayıları. Alt tablolar kitap başına değil, tek seferde
-  // çekilip JS'te gruplanır (N+1 yok); RLS zaten yalnızca kullanıcının
-  // satırlarını döndürdüğü için filtreye gerek kalmıyor. Kartın görseli artık
-  // kitabın kendi kapağı; karakter/mekan görsellerini çekmeye gerek yok.
+// Books plus per-book card counts. The child tables are fetched once and
+// grouped in JS rather than per book (no N+1); row-level security already
+// limits them to the user's rows. Card images are no longer needed here — the
+// cover comes from the book itself.
   const [{ data: books }, { data: characters }, { data: locations }, { data: quotes }] =
     await Promise.all([
       supabase.from("books").select("*").order("created_at", { ascending: false }),
@@ -94,7 +93,7 @@ export default async function DashboardPage() {
             action={addButton}
           />
         ) : (
-          // Map istemci bileşenine düz nesne olarak geçer.
+          // The Map is passed to the client component as a plain object.
           <Library books={list} summaries={Object.fromEntries(summaries)} />
         )}
       </section>

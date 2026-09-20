@@ -9,12 +9,12 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
 import { useControllableOpen } from "@/components/ui/use-controllable-open";
 
-// Karakter/mekan kartı ekleme VE düzenleme modalı (mode ile). Görsel dosya
-// olarak yüklenir (/api/upload-image) ve dönen kalıcı Storage URL'i
-// create/updateEntity'ye geçer. Düzenlemede yeni dosya seçilmezse mevcut
-// görsel korunur.
-// open/onOpenChange verilirse dışarıdan kontrol edilir (⋯ menüsü) ve kendi
-// tetikleyici butonu çizilmez.
+// Dialog for adding and editing a character or location card. The image is
+// uploaded as a file (/api/upload-image) and the permanent Storage URL that
+// comes back is passed to create/updateEntity. When editing, leaving the file
+// input empty keeps the current image.
+// Passing open/onOpenChange controls the dialog from the outside (the ⋯ menu)
+// and hides its own trigger button.
 export function EntityFormDialog({
   kind,
   bookId,
@@ -46,7 +46,7 @@ export function EntityFormDialog({
     setOpen(true);
   }
 
-  // Sıfırlama kapanışta da: dışarıdan açıldığında openDialog çalışmaz.
+  // Reset on close as well: openDialog never runs when it is controlled from the outside.
   function closeDialog() {
     setOpen(false);
     setError(null);
@@ -60,7 +60,7 @@ export function EntityFormDialog({
     const values = new FormData(formEl);
 
     startTransition(async () => {
-      // imageUrl boş kalırsa: create'te görselsiz, edit'te mevcut görsel korunur.
+      // An empty imageUrl means no image on create, and the current image kept on edit.
       let imageUrl = "";
 
       const file = values.get("file");
@@ -153,7 +153,7 @@ export function EntityFormDialog({
             />
           </Field>
 
-          {/* Görsel kaynağı seçimi */}
+          {/* Image source */}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-ink">
               {t.entity.image}
@@ -161,7 +161,7 @@ export function EntityFormDialog({
 
             {isEdit && entity?.image_url && (
               <div className="flex items-center gap-3 rounded-lg border border-line p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element -- mevcut görsel önizlemesi */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- preview of the current image */}
                 <img
                   src={entity.image_url}
                   alt={t.entity.currentImageAlt}
@@ -174,8 +174,8 @@ export function EntityFormDialog({
             )}
 
             <div className="flex items-center gap-3">
-              {/* Gizli input FormData için "file" adıyla kalır;
-                    davranış aynı, sadece tetikleyici şık bir buton. */}
+              {/* The hidden input keeps the "file" name for FormData; only the
+                    trigger is a styled button. */}
               <input
                 ref={fileInputRef}
                 type="file"

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-// Kart/panel yüzeyi: ince kenarlık + çok yumuşak ambient gölge ("kâğıt" hissi,
-// material tarzı ağır gölge değil).
+// Card and panel surface: a thin border plus a very soft ambient shadow — a
+// sheet of paper rather than a material-style elevation.
 export const cardClass = "rounded-2xl border border-line bg-surface shadow-paper";
 
 export function Card({

@@ -1,15 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Next.js 16: "middleware" artık "proxy" olarak adlandırılıyor (aynı işlev).
-// Bu dosya her istekte Supabase oturum cookie'sini tazeler VE korumalı
-// route'lar için optimistic yönlendirme yapar (PRD Bölüm 7).
+// Next.js 16 renamed "middleware" to "proxy" (same role). This file refreshes
+// the Supabase session cookie on every request and does the optimistic
+// redirects for protected routes.
 
-// Giriş yapmamış kullanıcının erişemeyeceği route'lar.
+// Routes that require a session.
 const PROTECTED_PREFIXES = ["/dashboard", "/books"];
 
 export async function proxy(request: NextRequest) {
-  // getUser() cookie tazeleyebilir; tazelenen cookie'ler bu response'a yazılır.
+// getUser() may refresh cookies; the refreshed ones are written to this response.
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -33,8 +33,8 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // ÖNEMLİ: createServerClient ile getUser() arasına kod koymayın; aksi halde
-  // oturumun rastgele kapanmasıyla sonuçlanan zor bir bug ile karşılaşabilirsiniz.
+// IMPORTANT: do not put code between createServerClient and getUser(), or
+// sessions start dropping at random and the cause is very hard to find.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -44,19 +44,19 @@ export async function proxy(request: NextRequest) {
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
 
-  // Giriş yapmamış kullanıcı korumalı route'a giderse -> /
+// Signed-out user on a protected route -> /
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return copyCookies(supabaseResponse, NextResponse.redirect(url));
   }
 
-  // Giriş yapmış kullanıcı landing/login (/) sayfasına giderse -> /dashboard
-  // Yalnızca sayfa gezinmelerinde (GET/HEAD). Landing'deki Server Action'lar
-  // da "/"a POST edilir; oturum varken onları yönlendirmek (307 metodu korur)
-  // isteği POST /dashboard'a taşır, yanıt RSC olmadığı için istemci
-  // "An unexpected response was received from the server" hatası fırlatır.
-  // Action'lar kendi redirect'lerini zaten yapıyor.
+// Signed-in user on the landing page -> /dashboard, but only for navigations
+// (GET/HEAD). The landing page's Server Actions POST to "/" as well, and a 307
+// preserves the method, so redirecting them would turn the request into
+// POST /dashboard; the response is not an RSC payload and the client throws
+// "An unexpected response was received from the server". The actions already
+// handle their own redirects.
   const isNavigation = request.method === "GET" || request.method === "HEAD";
   if (user && path === "/" && isNavigation) {
     const url = request.nextUrl.clone();
@@ -67,14 +67,14 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
-// Tazelenen oturum cookie'lerini redirect response'una taşır; aksi halde
-// yönlendirme sırasında kullanıcı oturumu düşebilir.
+// Carry the refreshed session cookies over to the redirect response, otherwise
+// the user can be signed out by the redirect itself.
 function copyCookies(from: NextResponse, to: NextResponse) {
   from.cookies.getAll().forEach((cookie) => to.cookies.set(cookie));
   return to;
 }
 
 export const config = {
-  // Statik dosyalar ve görseller dışındaki tüm route'larda çalış.
+// Run on every route except static files and images.
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)"],
 };

@@ -1,9 +1,9 @@
 import type { Dictionary } from "./tr";
 
-// İngilizce arayüz metinleri. Tip Dictionary olduğu için tr.ts'e eklenen
-// her anahtar burada da zorunlu.
+// English interface strings. Typed as Dictionary, so every key added to tr.ts
+// is required here too.
 //
-// "Mekan" bilerek "Place" (Location değil): bir okurun ağzından daha doğal.
+// "Place" rather than "Location" throughout: it is what a reader would say.
 
 const plural = (n: number, one: string, many: string) =>
   `${n} ${n === 1 ? one : many}`;

@@ -4,23 +4,23 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import "./globals.css";
 
-// Arayüz fontu. latin-ext, Türkçe karakterler (ğ, ş, ı, İ) için gerekli.
+// Interface font. latin-ext is required for Turkish characters (ğ, ş, ı, İ).
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-// Başlık/alıntı fontu — kitabi, karakterli serif.
+// Display font for headings and quotes.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-// Boyamadan önce senkron çalışır: kullanıcının kayıtlı tema seçimi varsa
-// <html data-theme> hemen set edilir. Olmazsa tema OS tercihine düşer.
-// Seçim yoksa hiçbir şey yazılmaz — "sistem" varsayılanı korunur.
+// Runs synchronously before the first paint: if the user picked a theme, it is
+// applied to <html data-theme> right away. With no stored choice nothing is
+// written and the theme follows the OS preference.
 const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t}}catch(e){}`;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,9 +36,9 @@ export default async function RootLayout({
   const locale = await getLocale();
 
   return (
-    // suppressHydrationWarning: THEME_SCRIPT hydration'dan önce <html>'e
-    // data-theme yazıyor; sunucu HTML'inde olmadığı için React uyarı verirdi.
-    // Yalnızca bu elemanın kendi özelliklerini kapsar, alt ağacı değil.
+    // suppressHydrationWarning: the theme script writes data-theme onto <html>
+    // before hydration, which React would otherwise report as a mismatch. It
+    // covers this element's own attributes only, not the subtree.
     <html
       suppressHydrationWarning
       lang={locale}

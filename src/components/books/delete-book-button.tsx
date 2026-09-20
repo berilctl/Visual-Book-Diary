@@ -5,8 +5,8 @@ import { useI18n } from "@/components/i18n-provider";
 import { buttonClass } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-// Silme — onay penceresi CASCADE etkisini (karakter, mekan, alıntı ve
-// görseller de gider) kullanıcıya hatırlatır (PRD Bölüm 2).
+// Delete, with a confirmation dialog that spells out the cascade: characters,
+// locations, quotes and images go with the book.
 export function DeleteBookButton({
   id,
   title,
@@ -15,7 +15,7 @@ export function DeleteBookButton({
 }: {
   id: string;
   title: string;
-  // Verilirse kendi butonu çizilmez, pencere dışarıdan (⋯ menüsü) açılır.
+  // When given, the component renders no button of its own and is opened from the ⋯ menu.
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {

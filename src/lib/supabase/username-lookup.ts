@@ -1,13 +1,14 @@
 import "server-only";
 import { createAdminClient } from "./admin";
 
-// Kullanıcı adından hesap bulma. Başkasının profilini okuduğu için RLS'i
-// aşmak zorunda; bu yüzden service-role ile ve yalnızca sunucuda çalışır.
-// Sonuç (kimlik ya da e-posta) asla istemciye dönmez.
+// Resolves a username to an account. It reads another user's profile row, so
+// it has to bypass row-level security: service-role, server-side only. Neither
+// the id nor the email is ever returned to the client.
 //
-// Arama, migrations/001_username_login.sql'deki user_id_for_username
-// fonksiyonuyla yapılır: PostgREST lower(username) üzerinden filtreleyemez,
-// ilike ise "_" karakterini joker sayar ("ber_ingo" -> "berlingo" eşleşirdi).
+// The lookup goes through the user_id_for_username function added in
+// migrations/001_username_login.sql: PostgREST cannot filter on
+// lower(username), and ilike would treat "_" as a wildcard ("ber_ingo" would
+// match "berlingo").
 
 type Lookup<T> = { ok: true; value: T | null } | { ok: false };
 

@@ -10,9 +10,10 @@ import { CheckIcon } from "@/components/ui/icons";
 import { Modal, ModalActions } from "@/components/ui/modal";
 import { StarRating } from "@/components/ui/star-rating";
 
-// Konfeti, butonun ekrandaki yerinden patlar. Kütüphane yalnızca ilk kutlamada
-// yüklenir (ilk sayfa yüküne eklenmez). Renkler tema token'larından okunur;
-// açık/koyu temada uyumlu kalır. "Hareketi azalt" açıksa hiç oynatılmaz.
+// The confetti bursts from wherever the button sits on screen. The library is
+// loaded on the first celebration only, so it stays out of the initial page
+// load. Colours are read from the theme tokens and work in both themes. With
+// "reduce motion" enabled it never plays.
 async function celebrate(from: HTMLElement) {
   const { default: confetti } = await import("canvas-confetti");
   const rect = from.getBoundingClientRect();
@@ -27,18 +28,18 @@ async function celebrate(from: HTMLElement) {
 
   const shared = { origin, colors, disableForReducedMotion: true };
   confetti({ ...shared, particleCount: 80, spread: 70, startVelocity: 40 });
-  // İkinci, daha geniş ve yavaş dalga — kutlama hissi.
+  // A second, wider and slower wave.
   setTimeout(() => {
     confetti({ ...shared, particleCount: 50, spread: 110, startVelocity: 28, scalar: 0.9 });
   }, 180);
 }
 
-// Kitabın okuma ilerlemesi: "Bitirdim" butonu, puan ve bitiş tarihi.
+// A book's reading progress: the finish button, the rating and the finish date.
 //
-// Puan penceresinin durumu burada tutulur, butonun içinde değil: kitap
-// bitirilince sayfa yeniden çizilir ve durum "Tamamlandı" olur, "Bitirdim"
-// butonu DOM'dan kalkar. Pencere butonun içinde olsaydı onunla birlikte
-// kaybolurdu. Bu bileşen her durumda render edildiği için yerinde kalır.
+// The rating dialog's state lives here rather than inside the button: once the
+// book is finished the page re-renders with status "completed" and the finish
+// button leaves the DOM. A dialog inside it would go with it; this component
+// renders in every status, so it stays.
 export function BookProgress({
   book,
   variant,
@@ -54,8 +55,8 @@ export function BookProgress({
   const [draft, setDraft] = useState<number | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
 
-  // Detay sayfasındaki yıldızlar tıklanınca hemen dolar; kayıt başarısız
-  // olursa işlem bitince eski değere döner.
+  // Stars on the detail page fill immediately on click and fall back to the
+  // previous value if the save fails.
   const [shownRating, setShownRating] = useOptimistic(book.rating ?? null);
 
   const finishable = FINISHABLE_STATUSES.includes(book.status);

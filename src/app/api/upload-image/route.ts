@@ -4,18 +4,18 @@ import { uploadImage } from "@/lib/storage/uploadImage";
 import { getDictionary } from "@/lib/i18n/server";
 import { IMAGE_MAX_MB, imageFileProblem } from "@/lib/storage/limits";
 
-// Yükleme + Storage yazımı için zaman marjı.
+// Headroom for the upload plus the Storage write.
 export const maxDuration = 30;
 
 
-// Dosya yükleme (PRD Bölüm 6.2).
-// Akış: oturum kontrolü -> book_id sahipliği -> tip/boyut validasyonu ->
-// uploadImage() -> kalıcı public URL.
+// Image upload endpoint.
+// Flow: session check -> book ownership -> type and size validation ->
+// uploadImage() -> permanent public URL.
 export async function POST(request: Request) {
   const t = await getDictionary();
   const supabase = await createClient();
 
-  // 1. Kullanıcıyı doğrula.
+  // 1. Authenticate the user.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: t.upload.unauthorized }, { status: 401 });
   }
 
-  // İstek gövdesini çöz.
+  // Parse the request body.
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: t.upload.fileMissing }, { status: 400 });
   }
 
-  // 2. book_id sahipliğini doğrula. RLS de korur; burada net 403 dönüyoruz.
+  // 2. Verify ownership of book_id. RLS covers this too; here it gives a clear 403.
   const { data: book } = await supabase
     .from("books")
     .select("id")
@@ -57,8 +57,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Tip ve boyut validasyonu (server-side). Kurallar lib/storage/limits.ts'te;
-  // formlar aynı kuralla erken uyarı verir ama yetki buradadır.
+  // 3. Server-side type and size validation. The rules live in
+  //    lib/storage/limits.ts; forms warn early with the same rules, but this is
+  //    where they are enforced.
   const problem = imageFileProblem(file);
   if (problem === "type") {
     return NextResponse.json({ error: t.upload.badType }, { status: 415 });
@@ -73,14 +74,14 @@ export async function POST(request: Request) {
     );
   }
 
-  // 4. uploadImage() -> kalıcı public URL. userId server-side oturumdan.
+  // 4. Upload and return the permanent public URL. userId comes from the session.
   try {
     const bytes = Buffer.from(await file.arrayBuffer());
     const url = await uploadImage(bytes, user.id, bookId, file.type);
     return NextResponse.json({ url }, { status: 201 });
   } catch (e) {
-    // Ham Storage hatası yalnızca sunucu loguna; istemciye iç ayrıntı
-    // (bucket/yol/politika mesajı) sızdırılmaz.
+    // The raw Storage error goes to the server log only; internal details
+    // (bucket, path, policy message) are not leaked to the client.
     console.error("[upload-image]", e instanceof Error ? e.message : e);
     return NextResponse.json({ error: t.upload.failed }, { status: 500 });
   }

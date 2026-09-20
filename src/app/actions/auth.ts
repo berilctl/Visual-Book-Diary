@@ -11,14 +11,14 @@ import { USERNAME_MAX, USERNAME_MIN, isValidUsername } from "@/lib/username";
 
 export type AuthState = { error?: string; notice?: string } | undefined;
 
-// Kullanıcı adı yok / e-posta yok / şifre yanlış — hepsi aynı mesaj
-// (t.auth.loginFailed). Böylece giriş formu, bir kullanıcı adının hangi
-// e-postaya bağlı olduğunu ya da hatanın şifreden mi hesaptan mı olduğunu
-// belli etmez.
+// Unknown username, unknown email and wrong password all return the same
+// message (t.auth.loginFailed), so the form cannot reveal which email a
+// username belongs to, or whether it was the password or the account that
+// was wrong.
 
-// Login — e-posta VEYA kullanıcı adı + şifre. "@" içeren giriş e-posta,
-// içermeyen kullanıcı adı sayılır (kullanıcı adında "@" izinli değil).
-// Başarıda /dashboard'a yönlendir.
+// Sign in with an email address OR a username, plus a password. An identifier
+// containing "@" is treated as an email, anything else as a username ("@" is
+// not allowed in usernames). On success, redirect to /dashboard.
 export async function login(
   _prevState: AuthState,
   formData: FormData,
@@ -49,8 +49,8 @@ export async function login(
   redirect("/dashboard");
 }
 
-// Register — username raw_user_meta_data'ya geçer; handle_new_user trigger'ı
-// onu profiles tablosuna yazar (PRD Bölüm 5.1).
+// Sign up. The username travels in raw_user_meta_data; the handle_new_user
+// trigger copies it into the profiles table.
 export async function register(
   _prevState: AuthState,
   formData: FormData,
@@ -74,8 +74,8 @@ export async function register(
     return { error: t.auth.passwordTooShort };
   }
 
-  // Asıl garanti veritabanındaki benzersiz index; bu ön kontrol yalnızca
-  // anlaşılır bir mesaj vermek için.
+// The unique index in the database is the real guarantee; this check only
+// exists to produce a readable message.
   const existing = await findUserIdByUsername(username);
   if (!existing.ok) return { error: t.errors.serviceUnavailable };
   if (existing.value) return { error: t.auth.usernameTaken };
@@ -88,19 +88,19 @@ export async function register(
   });
 
   if (error) {
-    // Ön kontrolle signUp arasında aynı adı başkası aldıysa benzersiz index
-    // handle_new_user trigger'ındaki insert'i düşürür; Supabase bunu yalnızca
-    // bu genel mesajla bildirir.
+// If someone else took the name between this check and signUp, the unique
+// index makes the insert in handle_new_user fail, and Supabase only reports
+// it through this generic message.
     if (/database error saving new user/i.test(error.message)) {
       return { error: t.auth.usernameRace };
     }
-    // Supabase Auth'un kendi mesajı (ör. geçersiz e-posta); yalnızca
-    // İngilizce döner, bilinmeyen hata türlerini çeviremiyoruz.
+// A message from Supabase Auth itself (an invalid email, for example). These
+// only come back in English; unknown error types cannot be translated.
     return { error: error.message };
   }
 
-  // E-posta onayı kapalıysa oturum hemen açılır -> dashboard.
-  // Açıksa session null döner -> kullanıcıyı bilgilendir.
+// With email confirmation disabled the session starts right away -> dashboard.
+// With it enabled, session is null -> tell the user to check their inbox.
   if (data.session) {
     redirect("/dashboard");
   }
@@ -108,7 +108,7 @@ export async function register(
   return { notice: t.auth.signupNotice };
 }
 
-// Logout — oturumu kapat ve landing'e dön.
+// Sign out and return to the landing page.
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();

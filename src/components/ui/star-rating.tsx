@@ -16,10 +16,10 @@ const SIZES = {
   lg: "size-9",
 } as const;
 
-// 5 yıldızlı puan.
-// - onChange yoksa salt okunur: ekran okuyucuya tek bir "5 üzerinden 4 yıldız".
-// - onChange varsa WAI-ARIA radio group: şeride tek Tab durağı (roving
-//   tabindex), ok tuşları/Home/End ile seçim, fareyle üzerine gelince önizleme.
+// A five-star rating.
+// - Without onChange it is read-only: screen readers get a single "4 out of 5 stars".
+// - With onChange it is a WAI-ARIA radio group: one Tab stop for the whole row
+//   (roving tabindex), arrow keys/Home/End to choose, and a hover preview.
 export function StarRating({
   value,
   onChange,
@@ -88,7 +88,7 @@ export function StarRating({
     >
       {STARS.map((n) => {
         const selected = n === current;
-        // Seçim yoksa ilk yıldız Tab durağı olur.
+        // With nothing selected, the first star becomes the Tab stop.
         const tabbable = current ? selected : n === RATING_MIN;
         return (
           <button

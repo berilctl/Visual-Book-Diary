@@ -7,8 +7,8 @@ import { Field, Select, Textarea, Input } from "@/components/ui/field";
 import { Modal, ModalActions } from "@/components/ui/modal";
 import { useI18n } from "@/components/i18n-provider";
 
-// Alıntı ekleme modalı: content (zorunlu), page_or_chapter (opsiyonel),
-// ve opsiyonel karakter bağlama (bu kitabın karakterleri arasından).
+// Dialog for adding a quote: content (required), page_or_chapter (optional)
+// and an optional link to one of this book's characters.
 export function QuoteFormDialog({
   bookId,
   characters,

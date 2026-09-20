@@ -1,9 +1,9 @@
-// Karakter ve mekan aynı kart mantığını paylaşır; "kind" ile parametrelenir.
-// kind değeri doğrudan tablo adıdır (characters / locations).
+// Characters and locations share the same card behaviour, parameterised by
+// "kind". The kind is also the table name (characters / locations).
 export const ENTITY_KINDS = ["characters", "locations"] as const;
 export type EntityKind = (typeof ENTITY_KINDS)[number];
 
-// Türe özgü arayüz metinleri sözlükte: t.entityKinds[kind].
+// Kind-specific interface strings live in the dictionary: t.entityKinds[kind].
 
 export type Entity = {
   id: string;

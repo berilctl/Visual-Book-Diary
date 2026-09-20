@@ -20,11 +20,11 @@ function focusableIn(root: HTMLElement | null) {
   );
 }
 
-// Üç diyalogda birebir kopyalanan modal kabuğu.
-// Erişilebilirlik buradan tek yerden geliyor: role="dialog" + aria-modal,
-// başlığa aria-labelledby bağı, Escape ile kapatma, odak tuzağı, açılışta
-// odağın içeri alınması, kapanışta tetikleyiciye geri verilmesi ve arka plan
-// scroll kilidi.
+// The shared dialog shell.
+// Accessibility lives here, in one place: role="dialog" plus aria-modal, the
+// aria-labelledby link to the title, closing on Escape, a focus trap, moving
+// focus inside on open, returning it to the trigger on close, and locking the
+// background scroll.
 export function Modal({
   open,
   onClose,
@@ -36,10 +36,10 @@ export function Modal({
   open: boolean;
   onClose: () => void;
   heading: string;
-  // Verilirse başlığın altında gösterilir ve aria-describedby ile bağlanır:
-  // ekran okuyucu pencereyi açıklamasıyla birlikte duyurur.
+  // When given, it is rendered under the title and linked with
+  // aria-describedby, so screen readers announce the dialog with its description.
   description?: ReactNode;
-  // "alertdialog": kullanıcının yanıt vermesi gereken onay pencereleri.
+  // "alertdialog": confirmations that the user has to answer.
   role?: "dialog" | "alertdialog";
   children: ReactNode;
 }) {
@@ -47,10 +47,10 @@ export function Modal({
   const headingId = useId();
   const descriptionId = useId();
 
-  // onClose çağıranlarda satır içi arrow fonksiyon; her render'da kimliği
-  // değişiyor. Ref'te tutuluyor ki asıl efekt yalnızca `open` değişince
-  // çalışsın — aksi halde her render'da odak yeniden içeri alınır ve
-  // kullanıcı yazarken odağı kaybederdi.
+  // Callers pass onClose as an inline arrow function, so its identity changes
+  // on every render. Keeping it in a ref lets the main effect depend on `open`
+  // alone — otherwise focus would be pulled back inside on every render and the
+  // user would lose the caret while typing.
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -103,12 +103,12 @@ export function Modal({
 
   if (!open) return null;
 
-  // document.body'ye portal: pencere onu açan bileşenin DOM'undan bağımsız
-  // çizilir. Kitaplık filtresi kartları gizlediğinde (display:none) içlerinden
-  // açılmış pencere (ör. "Bitirdim" sonrası puan penceresi) görünür kalır;
-  // kartların hover/katman etkileri de pencereyi etkilemez. Pencere yalnızca
-  // istemcide, kullanıcı etkileşimiyle açıldığı için sunucu render'ında
-  // document'a erişilmez.
+  // Portal into document.body, so the dialog is rendered independently of the
+  // component that opened it. When the library filter hides cards
+  // (display:none), a dialog opened from inside one (the rating dialog after
+  // finishing a book, say) stays visible, and the cards' hover and stacking
+  // effects cannot reach it. The dialog only ever opens on the client through
+  // user interaction, so document is never touched during server rendering.
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -143,7 +143,7 @@ export function Modal({
   );
 }
 
-// Diyalogların alt aksiyon satırı (İptal + onay) — o da her yerde aynıydı.
+// The action row at the bottom of a dialog (cancel plus confirm).
 export function ModalActions({ children }: { children: ReactNode }) {
   return <div className="mt-2 flex justify-end gap-2">{children}</div>;
 }

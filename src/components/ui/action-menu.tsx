@@ -11,25 +11,25 @@ export type ActionMenuItem = {
   onSelect: () => void;
 };
 
-// Tetikleyici görünümü seçenekle gelir, dışarıdan sınıf olarak değil: aynı
-// özgüllükteki çakışan sınıflar (px-0/px-4, w-full/w-24) bu projede CSS
-// sırasına göre yanlış tarafı kazandırmıştı.
+// The trigger's appearance comes from a variant rather than a class passed in:
+// conflicting classes of equal specificity (px-0/px-4, w-full/w-24) are
+// resolved by CSS source order, which is not what the caller expects.
 const TRIGGER_VARIANTS = {
-  // Kart başlığında, metnin yanında.
+  // Next to the text in a card heading.
   ghost: "text-ink-muted hover:bg-surface-sunken hover:text-ink",
-  // Kapak görselinin üstünde: her zeminde okunur olsun.
+  // On top of a cover image, where it has to stay legible on any background.
   floating:
     "bg-surface/85 text-ink shadow-paper backdrop-blur hover:bg-surface",
 } as const;
 
-// "⋯" işlem menüsü — WAI-ARIA menu button deseni.
-// - Tetikleyici: aria-haspopup="menu", aria-expanded; Enter/Space/tık açar,
-//   ↓ açıp ilk öğeye, ↑ açıp son öğeye odaklanır.
-// - Menü içinde: ↑/↓ döngüsel, Home/End; Escape kapatır ve odağı tetikleyiciye
-//   verir; Tab kapatır ve odak doğal akışında ilerler; dışarı tıklama kapatır.
-// - Seçimde önce odak tetikleyiciye döner, SONRA işlem çalışır: işlem bir
-//   pencere açarsa pencere "önceki odak" olarak tetikleyiciyi kaydeder ve
-//   kapanınca odak kaybolmaz (menü öğesi o sırada DOM'dan kalkmış olur).
+// The "⋯" action menu, following the WAI-ARIA menu button pattern.
+// - Trigger: aria-haspopup="menu", aria-expanded; Enter/Space/click opens it,
+//   ↓ opens and focuses the first item, ↑ opens and focuses the last.
+// - Inside the menu: ↑/↓ wrap around, Home/End jump; Escape closes and returns
+//   focus to the trigger; Tab closes and moves on naturally; an outside click closes.
+// - On selection focus returns to the trigger BEFORE the action runs: if the
+//   action opens a dialog, the dialog records the trigger as "previous focus"
+//   and focus survives the dialog closing (the menu item is gone by then).
 export function ActionMenu({
   label,
   items,
@@ -82,8 +82,8 @@ export function ActionMenu({
     item.onSelect();
   }
 
-  // Enter/Space burada ele alınmaz: butonun kendi click olayı açar/kapatır
-  // (keydown'da da açmak çift tetiklemeye yol açardı).
+  // Enter/Space are not handled here: the button's own click event toggles the
+  // menu, and opening on keydown as well would fire it twice.
   function handleTriggerKeyDown(event: React.KeyboardEvent) {
     if (event.key === "ArrowDown") {
       event.preventDefault();

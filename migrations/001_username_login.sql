@@ -1,13 +1,13 @@
 -- ============================================================================
--- 001 — Kullanıcı adıyla giriş
+-- 001 — Signing in with a username
 -- ============================================================================
--- Mevcut bir Supabase veritabanına uygulamak için: SQL Editor'e yapıştır.
--- Yeni kurulumlarda gerekmez; schema.sql'in 6. bölümü aynı içeriği taşır.
--- Tekrar çalıştırmak güvenlidir (idempotent).
+-- To apply this to an existing Supabase database: paste it into the SQL Editor
+-- and run it. New installations do not need it; section 6 of schema.sql covers
+-- the same ground. Running it again is safe (idempotent).
 --
--- ÖNCE KONTROL — bu sorgu satır döndürürse aynı kullanıcı adını (harf
--- büyüklüğü farkıyla) paylaşan hesaplar var demektir ve aşağıdaki index
--- oluşmaz. Önce o kayıtlardan birinin kullanıcı adını değiştir:
+-- CHECK FIRST — if this query returns rows, some accounts share a username
+-- that differs only in case and the index below cannot be created. Change one
+-- of those usernames first:
 --
 --   select lower(username) as username, count(*)
 --   from public.profiles
@@ -19,9 +19,9 @@
 create unique index if not exists profiles_username_lower_key
   on public.profiles (lower(username));
 
--- Kullanıcı adından hesap kimliği (e-posta DEĞİL). Yalnızca service_role
--- çalıştırabilir: anon/authenticated'a açık olsaydı PostgREST üzerinden
--- herkes çağırabilirdi. service_role RLS'i zaten aştığı için security
+-- Username -> account id (NOT the email address). Only service_role may
+-- execute it: granted to anon or authenticated, anyone could call it through
+-- PostgREST. service_role already bypasses RLS, so security
 -- definer gerekmiyor.
 create or replace function public.user_id_for_username(p_username text)
 returns uuid
@@ -35,5 +35,5 @@ $$;
 revoke all on function public.user_id_for_username(text) from public, anon, authenticated;
 grant execute on function public.user_id_for_username(text) to service_role;
 
--- PostgREST'in yeni fonksiyonu hemen görmesi için şema önbelleğini tazele.
+-- Refresh the schema cache so PostgREST picks the new function up right away.
 notify pgrst, 'reload schema';
